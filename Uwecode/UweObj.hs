@@ -18,7 +18,7 @@ data UweObj =
     | ArbitraryVal Natural
 
 instance Eq UweObj where
-	a == b = asEncoding a == asEncoding b
+    a == b = asEncoding a == asEncoding b
 
 data UweObjEncoding =
     FuncsListEncoding String [UweObjEncoding]

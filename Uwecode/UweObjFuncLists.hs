@@ -26,7 +26,7 @@ function n x = me where
     _simplify depth = function n $ simplify x $ decrementDepth depth
     _call obj2
         | n `Set.member` vs = call (_replaceBindings vs) obj2
-        | otherwise = replace (_replaceBindings vs) n obj2
+        | otherwise = replace (replaceBindings x vs) n obj2
         where vs = unboundVars obj2 Set.empty
     _replace m obj2
         | m == n = me

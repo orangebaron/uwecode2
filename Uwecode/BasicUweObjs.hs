@@ -17,8 +17,7 @@ returnVal n = me where
         | Set.member n set = Set.empty
         | otherwise = _allVars
     _replaceBindings = const me
-    _asEncoding = FuncsListEncoding ("returnVal " ++ show n) []
-
+    _asEncoding = EtcEncoding "returnVal" [n] []
 function :: UweVar -> UweObj -> UweObj
 function n x = me where
     me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding
@@ -45,7 +44,7 @@ function n x = me where
             smallestValueNotIn = smallestValueNotInHelper 0
             newN = smallestValueNotIn $ vs `Set.union` _allVars
             newX = replace x n $ returnVal newN
-    _asEncoding = FuncsListEncoding ("function " ++ show n) [x]
+    _asEncoding = EtcEncoding "function" [n] [x]
 
 called :: UweObj -> UweObj -> UweObj
 called a b = me where
@@ -78,7 +77,7 @@ churchNum n = me where
     _allVars = Set.empty
     _unboundVars = const Set.empty
     _replaceBindings = const me
-    _asEncoding = FuncsListEncoding ("churchNum " ++ show n) []
+    _asEncoding = EtcEncoding "churchNum" [n] []
 
 calledChurchNum :: Natural -> UweObj -> UweObj
 calledChurchNum 0 _ = function 0 $ returnVal 0
@@ -90,7 +89,7 @@ calledChurchNum n x = me where
     _allVars = allVars x
     _unboundVars = unboundVars x
     _replaceBindings vs = calledChurchNum n $ replaceBindings x vs
-    _asEncoding = FuncsListEncoding ("calledChurchNum " ++ show n) [x]
+    _asEncoding = EtcEncoding "calledChurchNum" [n] [x]
 
 arbitraryVal :: Natural -> UweObj
 arbitraryVal n = me where

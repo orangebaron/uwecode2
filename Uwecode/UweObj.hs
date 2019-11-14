@@ -22,7 +22,7 @@ instance Show UweObj where
     show = show . asEncoding
 
 data UweObjEncoding =
-    FuncsListEncoding String [UweObj]
+    EtcEncoding String [Natural] [UweObj]
     | CalledEncoding UweObj UweObj
     | ArbitraryValEncoding Natural deriving (Show, Eq)
 

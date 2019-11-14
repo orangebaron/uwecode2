@@ -1,4 +1,4 @@
-module Uwecode.UweObjFuncLists where
+module Uwecode.BasicUweObjs where
 
 import Uwecode.UweObj
 import Numeric.Natural
@@ -6,9 +6,9 @@ import qualified Data.Set as Set
 
 returnVal :: UweVar -> UweObj
 returnVal n = me where
-    me = UweObjFuncsList _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding
+    me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding
     _simplify = const me
-    _call = Called me
+    _call = called me
     _replace m obj2
         | m == n = obj2
         | otherwise = me
@@ -21,7 +21,7 @@ returnVal n = me where
 
 function :: UweVar -> UweObj -> UweObj
 function n x = me where
-    me = UweObjFuncsList _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding
+    me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding
     _simplify (Just 0) = me
     _simplify depth = function n $ simplify x $ decrementDepth depth
     _call obj2
@@ -45,11 +45,33 @@ function n x = me where
             smallestValueNotIn = smallestValueNotInHelper 0
             newN = smallestValueNotIn $ vs `Set.union` _allVars
             newX = replace x n $ returnVal newN
-    _asEncoding = FuncsListEncoding ("function " ++ show n) [asEncoding x]
+    _asEncoding = FuncsListEncoding ("function " ++ show n) [x]
+
+called :: UweObj -> UweObj -> UweObj
+called a b = me where
+    me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding
+    _simplify (Just 0) = me
+    _simplify depth
+        | bothValsEq  = me
+        | val1Eq      = simp val2
+        | otherwise   = simp val1
+        where
+            simp x     = simplify x (decrementDepth depth)
+            simpA      = simp a
+            val1       = call a     b
+            val2       = call simpA b
+            val1Eq     = val1 == me
+            bothValsEq = val1Eq && val2 == me
+    _call = called me
+    _replace m obj2 = called (replace a m obj2) (replace b m obj2)
+    _allVars = allVars a `Set.union` allVars b
+    _unboundVars vs = unboundVars a vs `Set.union` unboundVars b vs
+    _replaceBindings vs = called (replaceBindings a vs) (replaceBindings b vs)
+    _asEncoding = CalledEncoding a b
 
 churchNum :: Natural -> UweObj
 churchNum n = me where
-    me = UweObjFuncsList _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding
+    me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding
     _simplify = const me
     _call = calledChurchNum n
     _replace = const $ const me
@@ -61,11 +83,22 @@ churchNum n = me where
 calledChurchNum :: Natural -> UweObj -> UweObj
 calledChurchNum 0 _ = function 0 $ returnVal 0
 calledChurchNum n x = me where
-    me = UweObjFuncsList _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding
+    me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding
     _simplify = const me
-    _call = (call x) . (Called $ calledChurchNum (n-1) x)
+    _call = (call x) . (called $ calledChurchNum (n-1) x)
     _replace m obj2 = calledChurchNum n $ replace x m obj2
     _allVars = allVars x
     _unboundVars = unboundVars x
     _replaceBindings vs = calledChurchNum n $ replaceBindings x vs
-    _asEncoding = FuncsListEncoding ("calledChurchNum " ++ show n) [asEncoding x]
+    _asEncoding = FuncsListEncoding ("calledChurchNum " ++ show n) [x]
+
+arbitraryVal :: Natural -> UweObj
+arbitraryVal n = me where
+    me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding
+    _simplify = const me
+    _call = called me
+    _replace = const $ const me
+    _allVars = Set.empty
+    _unboundVars = const Set.empty
+    _replaceBindings = const me
+    _asEncoding = ArbitraryValEncoding n

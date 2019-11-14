@@ -1,7 +1,7 @@
 module Uwecode.UweObj where
 
-import qualified Data.Set as Set
 import Numeric.Natural
+import qualified Data.Set as Set
 
 type UweVar = Natural
 type Depth = Maybe Natural

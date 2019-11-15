@@ -14,40 +14,40 @@ conversionToIgnoringConversion conv depth obj = helper $ conv depth obj where
     helper (Left _) = Nothing
     helper (Right x) = Just x
 
+switchEither :: Either a b -> Either b a
+switchEither (Left x) = Right x
+switchEither (Right x) = Left x
+
 objToNumber :: Conversion Natural
-objToNumber depth obj
-    | firstTryWorked = firstTry
-    | secondTryWorked = secondTry
-    | otherwise = thirdTry
-    where
-        firstTry = simplifyWithCriteriaGivenDepth firstCriteria depth obj
-        firstTryWorked = isRight firstTry
-        firstTryObj = fromLeft obj firstTry -- default value obj should never be used but is here just in case
-        secondTry = simplifyWithCriteriaGivenDepth secondCriteria depth $ call firstTryObj $ arbitraryVal 0
-        secondTryWorked = isRight secondTry
-        secondTryObj = fromLeft obj secondTry -- default value obj should never be used but is here just in case
-        thirdTry = simplifyWithCriteriaGivenDepth thirdCriteria depth $ call secondTryObj $ arbitraryVal 1
+objToNumber depth obj = switchEither $ do
+	firstTryObj <- doSimplify firstCriteria obj
+	secondTryObj <- doSimplify secondCriteria $ call firstTryObj $ arbitraryVal 0
+	doSimplify thirdCriteria $ call secondTryObj $ arbitraryVal 1
+	return firstTryObj
+	where
+		doSimplify :: SimplifyCriteria Natural -> UweObj -> Either Natural UweObj
+		doSimplify criteria x = switchEither $ simplifyWithCriteriaGivenDepth criteria depth x
 
-        makeCriteria :: (UweObjEncoding -> Maybe Natural) -> SimplifyCriteria Natural
-        makeCriteria helper obj = helper $ asEncoding obj
+		makeCriteria :: (UweObjEncoding -> Maybe Natural) -> SimplifyCriteria Natural
+		makeCriteria helper obj = helper $ asEncoding obj
 
-        firstCriteria :: SimplifyCriteria Natural
-        firstCriteria = makeCriteria firstHelper
-        firstHelper (EtcEncoding "churchNum" [n] []) = Just n
-        firstHelper _ = Nothing
+		firstCriteria :: SimplifyCriteria Natural
+		firstCriteria = makeCriteria firstHelper
+		firstHelper (EtcEncoding "churchNum" [n] []) = Just n
+		firstHelper _ = Nothing
 
-        secondCriteria :: SimplifyCriteria Natural
-        secondCriteria = makeCriteria secondHelper
-        secondHelper (EtcEncoding "calledChurchNum" [n] [x])
-            | x == arbitraryVal 0 = Just n
-            | otherwise = Nothing
-        secondHelper _ = Nothing
+		secondCriteria :: SimplifyCriteria Natural
+		secondCriteria = makeCriteria secondHelper
+		secondHelper (EtcEncoding "calledChurchNum" [n] [x])
+			| x == arbitraryVal 0 = Just n
+			| otherwise = Nothing
+		secondHelper _ = Nothing
 
-        thirdCriteria :: SimplifyCriteria Natural
-        thirdCriteria = makeCriteria thirdHelper
-        thirdHelper (CalledEncoding a b)
-            | b == arbitraryVal 1 = (secondCriteria a) >>= (return . (+ 1))
-            | a == arbitraryVal 0 = (thirdCriteria b) >>= (return . (+ 1))
-            | otherwise = Nothing
-        thirdHelper (ArbitraryValEncoding 1) = Just 0
-        thirdHelper _ = Nothing
+		thirdCriteria :: SimplifyCriteria Natural
+		thirdCriteria = makeCriteria thirdHelper
+		thirdHelper (CalledEncoding a b)
+			| a == arbitraryVal 0 = (thirdCriteria b) >>= (return . (+ 1))
+			| b == arbitraryVal 1 = secondCriteria a
+			| otherwise = Nothing
+		thirdHelper (ArbitraryValEncoding 1) = Just 0
+		thirdHelper _ = Nothing

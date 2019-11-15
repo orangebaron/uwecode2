@@ -51,16 +51,20 @@ called a b = me where
     me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding
     _simplify (Just 0) = me
     _simplify depth
-        | bothValsEq  = me
-        | val1Eq      = simp val2
-        | otherwise   = simp val1
+        | val1Diff  = simp val1
+        | val2Diff  = simp val2
+        | val3Diff  = simp val3
+        | otherwise = me
         where
             simp x     = simplify x (decrementDepth depth)
             simpA      = simp a
+            simpB      = simp b
             val1       = call a     b
             val2       = call simpA b
-            val1Eq     = val1 == me
-            bothValsEq = val1Eq && val2 == me
+            val3       = call simpA simpB
+            val1Diff = val1 /= me
+            val2Diff = val2 /= me
+            val3Diff = val3 /= me
     _call = called me
     _replace m obj2 = called (replace a m obj2) (replace b m obj2)
     _allVars = allVars a `Set.union` allVars b

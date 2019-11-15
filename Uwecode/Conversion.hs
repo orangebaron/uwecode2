@@ -29,21 +29,21 @@ objToNumber = criteriaToConversion [Just criteria1, Just criteria2, Just criteri
 
     criteria1 :: SimplifyCriteria Natural
     criteria1 = makeCriteria helper1
-    helper1 (EtcEncoding "churchNum" [n] []) = Just n
+    helper1 (UweObjEncoding "churchNum" [n] []) = Just n
     helper1 _ = Nothing
 
     criteria2 :: SimplifyCriteria Natural
     criteria2 = makeCriteria helper2
-    helper2 (EtcEncoding "calledChurchNum" [n] [x])
+    helper2 (UweObjEncoding "calledChurchNum" [n] [x])
             | x == arbitraryVal 0 = Just n
             | otherwise = Nothing
     helper2 _ = Nothing
 
     criteria3 :: SimplifyCriteria Natural
     criteria3 = makeCriteria helper3
-    helper3 (CalledEncoding a b)
+    helper3 (UweObjEncoding "called" [] [a, b])
             | a == arbitraryVal 0 = (criteria3 b) >>= (return . (+ 1))
             | b == arbitraryVal 1 = criteria2 a
             | otherwise = Nothing
-    helper3 (ArbitraryValEncoding 1) = Just 0
+    helper3 (UweObjEncoding "arbitraryVal" [1] []) = Just 0
     helper3 _ = Nothing

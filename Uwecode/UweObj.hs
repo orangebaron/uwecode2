@@ -21,10 +21,7 @@ instance Eq UweObj where
 instance Show UweObj where
     show = show . asEncoding
 
-data UweObjEncoding =
-    EtcEncoding String [Natural] [UweObj]
-    | CalledEncoding UweObj UweObj
-    | ArbitraryValEncoding Natural deriving (Show, Eq)
+data UweObjEncoding = UweObjEncoding String [Natural] [UweObj] deriving (Show, Eq)
 
 decrementDepth :: Depth -> Depth
 decrementDepth = (>>= (return . (subtract 1)))

@@ -17,7 +17,7 @@ returnVal n = me where
         | Set.member n set = Set.empty
         | otherwise = _allVars
     _replaceBindings = const me
-    _asEncoding = EtcEncoding "returnVal" [n] []
+    _asEncoding = UweObjEncoding "returnVal" [n] []
 function :: UweVar -> UweObj -> UweObj
 function n x = me where
     me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding
@@ -44,7 +44,7 @@ function n x = me where
             smallestValueNotIn = smallestValueNotInHelper 0
             newN = smallestValueNotIn $ vs `Set.union` _allVars
             newX = replace x n $ returnVal newN
-    _asEncoding = EtcEncoding "function" [n] [x]
+    _asEncoding = UweObjEncoding "function" [n] [x]
 
 called :: UweObj -> UweObj -> UweObj
 called a b = me where
@@ -70,7 +70,7 @@ called a b = me where
     _allVars = allVars a `Set.union` allVars b
     _unboundVars vs = unboundVars a vs `Set.union` unboundVars b vs
     _replaceBindings vs = called (replaceBindings a vs) (replaceBindings b vs)
-    _asEncoding = CalledEncoding a b
+    _asEncoding = UweObjEncoding "called" [] [a, b]
 
 churchNum :: Natural -> UweObj
 churchNum n = me where
@@ -81,7 +81,7 @@ churchNum n = me where
     _allVars = Set.empty
     _unboundVars = const Set.empty
     _replaceBindings = const me
-    _asEncoding = EtcEncoding "churchNum" [n] []
+    _asEncoding = UweObjEncoding "churchNum" [n] []
 
 calledChurchNum :: Natural -> UweObj -> UweObj
 calledChurchNum 0 _ = function 0 $ returnVal 0
@@ -93,7 +93,7 @@ calledChurchNum n x = me where
     _allVars = allVars x
     _unboundVars = unboundVars x
     _replaceBindings vs = calledChurchNum n $ replaceBindings x vs
-    _asEncoding = EtcEncoding "calledChurchNum" [n] [x]
+    _asEncoding = UweObjEncoding "calledChurchNum" [n] [x]
 
 arbitraryVal :: Natural -> UweObj
 arbitraryVal n = me where
@@ -104,4 +104,4 @@ arbitraryVal n = me where
     _allVars = Set.empty
     _unboundVars = const Set.empty
     _replaceBindings = const me
-    _asEncoding = ArbitraryValEncoding n
+    _asEncoding = UweObjEncoding "arbitraryVal" [n] []

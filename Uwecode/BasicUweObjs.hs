@@ -62,9 +62,9 @@ called a b = me where
             val1       = call a     b
             val2       = call simpA b
             val3       = call simpA simpB
-            val1Diff = val1 /= me
-            val2Diff = val2 /= me
-            val3Diff = val3 /= me
+            val1Diff   = val1 /= me
+            val2Diff   = val2 /= me
+            val3Diff   = val3 /= me
     _call = called me
     _replace m obj2 = called (replace a m obj2) (replace b m obj2)
     _allVars = allVars a `Set.union` allVars b

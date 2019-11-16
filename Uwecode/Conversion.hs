@@ -11,9 +11,7 @@ type IgnoringConversion a = Depth -> UweObj -> Maybe a
 type EncodingCriteria a = UweObjEncoding -> Maybe a
 
 conversionToIgnoringConversion :: Conversion a -> IgnoringConversion a
-conversionToIgnoringConversion conv depth obj = helper $ conv depth obj where
-    helper (Left _) = Nothing
-    helper (Right x) = Just x
+conversionToIgnoringConversion conv depth obj = either (const Nothing) Just $ conv depth obj
 
 criteriaToConversion :: [Maybe (Criteria a)] -> Conversion a
 criteriaToConversion (firstCriteria:restCriteria) depth obj0 = tryToSimplify (helper 0) firstCriteria obj0 where
@@ -27,10 +25,10 @@ encodingCriteriaToCriteria :: EncodingCriteria a -> Criteria a
 encodingCriteriaToCriteria = (. asEncoding)
 
 encodingCriteriaToConversion :: [Maybe (EncodingCriteria a)] -> Conversion a
-encodingCriteriaToConversion = criteriaToConversion . (map (>>= (return . encodingCriteriaToCriteria)))
+encodingCriteriaToConversion = criteriaToConversion . (map $ fmap encodingCriteriaToCriteria)
 
 protectConversionEither :: (a -> Either a b) -> a -> Either a b
-protectConversionEither f x = either (const $ Left x) Right $ f x
+protectConversionEither f x = Left x <> f x
 
 encCriteriaAndEitherFuncToConversion :: EncodingCriteria a -> (Depth -> UweObj -> Either UweObj a) -> Conversion a
 encCriteriaAndEitherFuncToConversion criteria func depth obj = either (protectConversionEither $ func depth) Right $ simplifyWithCriteriaGivenMaxDepth (encodingCriteriaToCriteria criteria) depth obj

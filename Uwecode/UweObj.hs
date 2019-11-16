@@ -24,4 +24,4 @@ instance Show UweObj where
 data UweObjEncoding = UweObjEncoding String [Natural] [UweObj] deriving (Show, Eq)
 
 decrementDepth :: Depth -> Depth
-decrementDepth = (>>= (return . (subtract 1)))
+decrementDepth = fmap $ subtract 1

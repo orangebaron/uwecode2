@@ -25,4 +25,4 @@ simplifyWithCriteriaGivenMaxDepth criteria maxDepth = helper (Just 2) where
         where
             simplifiedObj = simplify obj depth
             criteriaReturn = applyCriteria criteria simplifiedObj
-            increasedDepth = depth >>= (return . (* 2))
+            increasedDepth = fmap (* 2) depth

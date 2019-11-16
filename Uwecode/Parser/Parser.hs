@@ -1,8 +1,8 @@
-module Uwecode.Parser where
+module Uwecode.Parser.Parser where
 
 import Uwecode.UweObj
 import Uwecode.BasicUweObjs
-import Uwecode.AST
+import Uwecode.Parser.CharsAndStrings
 import Control.Monad
 import Control.Applicative
 import Numeric.Natural
@@ -102,51 +102,3 @@ number = token $ do
     return $ read numStr
 
 backtickPrefacedWord = specificChar backtick >> word
-
-declaration :: Parser DeclarationAST
-declaration = equalsDeclaration
-
-equalsDeclaration :: Parser DeclarationAST
-equalsDeclaration = separatedBy word equalsToken expression Equals
-
-subNormalCallExpression :: Parser ExpressionAST
-subNormalCallExpression = numLiteral <|> wordExpression
-
-subBacktickCallExpression :: Parser ExpressionAST
-subBacktickCallExpression = normalCall <|> subNormalCallExpression
-
-expression :: Parser ExpressionAST
-expression = funcLiteral <|> backtickCall <|> subBacktickCallExpression
-
-funcLiteral :: Parser ExpressionAST
-funcLiteral = separatedBy word arrowToken expression FuncLiteral
-
-wordExpression :: Parser ExpressionAST
-wordExpression = do
-    w <- word
-    return $ Word w
-
-numLiteral :: Parser ExpressionAST
-numLiteral = do
-    n <- number
-    return $ NumLiteral n
-
-backtickCall :: Parser ExpressionAST
-backtickCall = do
-    a <- subBacktickCallExpression
-    b <- backtickPrefacedWord
-    c <- expression
-    return $ Called (Called (Word b) a) c
-
-normalCall :: Parser ExpressionAST
-normalCall = do
-    a <- subNormalCallExpression
-    b <- expression
-    return $ Called a b
-
-arrowStr = "->"
-equalsStr = "="
-spaceChars = [' ', '\t', '\r', '\n']
-numChars = ['0'..'9']
-wordChars = ['a'..'z'] ++ ['A'..'Z'] ++ numChars ++ "~!@#$%^&*_+-\\|:;<>?,./"
-backtick = '`'

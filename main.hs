@@ -1,4 +1,5 @@
-import Uwecode.Parser
+import Uwecode.Parser.Parser
+import Uwecode.Parser.DeclarationParsers
 
 main = do
     putStrLn "enter a thing:"

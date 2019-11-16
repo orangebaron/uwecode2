@@ -14,3 +14,4 @@ singleQuote = '\''
 doubleQuote = '"'
 quotes = "'\""
 enclosers = fromList [('(', ')'), ('[', ']'), ('{', '}')]
+backslashReplacements = fromList [('n', '\n'), ('r', '\r'), ('t', '\t')]

@@ -7,7 +7,7 @@ equalsStr = "="
 spaceChars = [' ', '\t', '\r', '\n']
 numChars = ['0'..'9']
 alphaChars = ['a'..'z'] ++ ['A'..'Z']
-normalSymbolChars = "~!@#$%^&*_+-\\|:;<>?,./"
+normalSymbolChars = "~!@#$%^&*_+-\\|:;<>?,./="
 wordChars = numChars ++ alphaChars ++ normalSymbolChars
 backtick = '`'
 singleQuote = '\''

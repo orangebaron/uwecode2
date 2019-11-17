@@ -67,19 +67,22 @@ separatedBy p1 p2 p3 f = do
     c <- p3
     return $ f a c
 
+zeroOrMoreIn :: [Char] -> Parser String
+zeroOrMoreIn cs = listed $ charSatisfies (`elem` cs)
+
 oneOrMoreIn :: [Char] -> Parser String
 oneOrMoreIn cs = oneOrMoreListed $ charSatisfies (`elem` cs)
 
 space :: Parser String
 space = oneOrMoreIn spaceChars
 
-wantEmpty :: Parser ()
-wantEmpty = Parser (\s -> case s of
-    "" -> Just ((), "")
+wantEmpty :: a -> Parser a
+wantEmpty a = Parser (\s -> case s of
+    "" -> Just (a, "")
     _  -> Nothing)
 
-afterToken :: Parser ()
-afterToken = (space >> return ()) <|> wantEmpty
+afterToken :: Parser String
+afterToken = space <|> wantEmpty ""
 
 token :: Parser a -> Parser a
 token p = do

@@ -72,9 +72,3 @@ declStringsToCode (a:b) = do
     guard (remaining == "")
     declsB <- declStringsToCode b
     return (declA:declsB)
-
-code :: Parser CodeAST
-code = Parser (\cs -> do
-    (strs, remaining) <- parse separateDeclarations cs
-    decls <- declStringsToCode strs
-    return (decls, remaining))

@@ -1,9 +1,9 @@
 import Uwecode.Parser.Parser
-import Uwecode.Parser.DeclarationParsers
+import Uwecode.Parser.CodeReader
 
 main = do
     putStrLn "enter a thing:"
-    expr <- getLine
+    str <- getLine
     putStrLn "translated to AST:"
-    print (code `parse` expr)
+    print $ readUweString str
     main

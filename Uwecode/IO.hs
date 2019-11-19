@@ -12,23 +12,22 @@ data UweController threadState = UweController {
     doneWithProcess :: threadState -> IO ()
 }
 
-data UweIO threadState = UweIO { runIO :: UweController threadState -> StateT threadState IO UweObj }
+data UweIO = InputUweIO UweObj | OutputUweIO UweObj UweObj | ForkUweIO UweObj UweIO
 
-inputUweIO :: UweObj -> UweIO a
-inputUweIO obj = UweIO (\controller -> do
+runIO :: UweController threadState -> UweIO -> StateT threadState IO UweObj
+
+runIO controller (InputUweIO obj) = do
     inp <- giveInput controller
-    return $ obj `call` inp)
+    return $ obj `call` inp
 
-outputUweIO :: UweObj -> UweObj -> UweIO a
-outputUweIO otp nextObj = UweIO (\controller -> do
+runIO controller (OutputUweIO otp nextObj) = do
     controller `takeOutput` otp
-    return nextObj)
+    return nextObj
 
-forkUweIO :: UweObj -> UweIO a -> UweIO a
-forkUweIO thisThreadObj newThreadIO = UweIO (\controller -> do
+runIO controller (ForkUweIO thisThreadObj newThreadIO) = do
     newState <- newThread controller
     lift $ forkIO $ do
-        (_, state) <- runStateT (newThreadIO `runIO` controller) newState
+        (_, state) <- runStateT (runIO controller newThreadIO) newState
         doneWithProcess controller state
         return ()
-    return thisThreadObj)
+    return thisThreadObj

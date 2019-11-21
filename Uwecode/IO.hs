@@ -15,7 +15,7 @@ data UweController threadState = UweController {
     doneWithProcess :: threadState -> IO ()
 }
 
-data UweIO = InputUweIO UweObj | OutputUweIO UweObj UweObj | ForkUweIO UweObj UweObj | NullUweIO
+data UweIO = InputUweIO UweObj | OutputUweIO UweObj UweObj | ForkUweIO UweObj UweObj | NullUweIO deriving (Show, Eq)
 
 runIO :: UweController threadState -> UweIO -> StateT threadState IO (Maybe UweObj)
 
@@ -35,7 +35,7 @@ runIO controller (ForkUweIO thisThreadObj nextThreadObj) = do
 runIO controller NullUweIO = return Nothing
 
 runStartedThread :: UweController threadState -> (Maybe UweIO) -> StateT threadState IO ()
-runStartedThread controller Nothing = lift $ hPutStr stderr "failed to simplify to expected value"
+runStartedThread controller Nothing = lift $ hPutStr stderr "failed to simplify to expected value\n"
 runStartedThread controller (Just io) = do
     newObj <- runIO controller io
     case newObj of

@@ -194,11 +194,11 @@ objToIO depth obj = do
                     (obj4l,  obj4r)  <- ignoringConversion objToTuple depth obj3
                     (obj4ll, obj4lr) <- ignoringConversion objToTuple depth obj4l
                     n <- ignoringConversion objToNumber depth obj4ll
-                    return $ OutputUweIO n obj4ll $ objToIO depth obj4r
+                    return $ OutputUweIO n obj4lr $ objToIO depth obj4r
         (Right obj2) -> do
             maybe2 <- ignoringConversion objToMaybe depth obj2
             case maybe2 of
-                Nothing -> return NullUweIO
+                Nothing     -> return NullUweIO
                 (Just obj3) -> do
                     (obj4l, obj4r) <- ignoringConversion objToTuple depth obj3
                     return $ ForkUweIO (objToIO depth obj4l) (objToIO depth obj4r)

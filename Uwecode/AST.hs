@@ -24,7 +24,7 @@ data VarMap = VarMap { functionVars :: Map String UweVar, globalVars :: GlobalVa
 emptyVarMap = VarMap Map.empty Map.empty
 
 getVar :: VarMap -> String -> Maybe UweObj
-getVar (VarMap map1 map2) var = (fmap returnVal (map1 !? var)) <|> (map2 Map.!? var)
+getVar (VarMap map1 map2) var = (fmap returnVal (map1 !? var)) <|> (map2 !? var)
 
 makeFunctionVar :: VarMap -> String -> (VarMap, UweVar)
 makeFunctionVar (VarMap map1 map2) var = case (map1 !? var) of
@@ -32,8 +32,8 @@ makeFunctionVar (VarMap map1 map2) var = case (map1 !? var) of
     Nothing  -> (VarMap (insert var n map1) map2, n) where
         n = firstNumNotInMap 0
         firstNumNotInMap testN
-            | isIn n    = firstNumNotInMap (testN + 1)
-            | otherwise = testN
+            | isIn testN = firstNumNotInMap (testN + 1)
+            | otherwise  = testN
         isIn testN = not $ Map.null $ Map.filter (== testN) map1
 
 readExpressionAST :: VarMap -> ExpressionAST -> Maybe UweObj

@@ -29,10 +29,10 @@ runIO fs close (OutputUweIO n otp next) = case (drop (naturalToInt n) fs) of
         runMaybeIO fs close next
 
 runIO fs close (ForkUweIO next other) = do
-    n      <- firstUntakenThread
-    state  <- get
-    put    $ ThreadState (threadNum state) (churchNum n) (takenThreads state)
-    lift   $ forkIO $ do
+    n     <- firstUntakenThread
+    state <- get
+    put   $ ThreadState (threadNum state) (churchNum n) (takenThreads state)
+    lift  $ forkIO $ do
         runStateT (runMaybeIO fs close other) $ ThreadState n (churchNum $ threadNum state) (takenThreads state)
         return ()
     runMaybeIO fs close next
@@ -58,3 +58,8 @@ unsuccessful = lift $ hPutStr stderr "failed to simplify to expected value\n"
 
 runMaybeIO :: [UweObj -> UweIOMonad ()] -> UweIOMonad () -> Maybe UweIO -> UweIOMonad ()
 runMaybeIO fs close = maybe unsuccessful (runIO fs close)
+
+makeThreadState :: IO ThreadState
+makeThreadState = do
+    ref <- newIORef $ S.singleton 0
+    return $ ThreadState 0 (churchNum 0) ref

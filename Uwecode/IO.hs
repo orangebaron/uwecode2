@@ -1,12 +1,11 @@
 module Uwecode.IO where
 
+import Uwecode.UweObj
 import Uwecode.BasicUweObjs
 import Uwecode.Conversion
 import Control.Monad.State
 import Control.Concurrent
 import System.IO
-
-import Uwecode.UweObj
 
 data UweController threadState = UweController {
     giveInput       :: StateT threadState IO UweObj,
@@ -49,22 +48,20 @@ startAndRunProcess controller state obj = do
     return ()
 
 objToIO :: UweObj -> Maybe UweIO
-objToIO obj = case (do
-    either1 <- objToEither Nothing obj
+objToIO obj = do
+    either1 <- ignoringConversion objToEither Nothing obj
     case either1 of
         (Left obj2) -> do
-            either2 <- objToEither Nothing obj2
+            either2 <- ignoringConversion objToEither Nothing obj2
             case either2 of
                 (Left obj3) -> return $ InputUweIO obj3
                 (Right obj3) -> do
-                    (obj4l, obj4r) <- objToTuple Nothing obj3
+                    (obj4l, obj4r) <- ignoringConversion objToTuple Nothing obj3
                     return $ OutputUweIO obj4l obj4r
         (Right obj2) -> do
-            maybe2 <- objToMaybe Nothing obj2
+            maybe2 <- ignoringConversion objToMaybe Nothing obj2
             case maybe2 of
                 Nothing -> return NullUweIO
                 (Just obj3) -> do
-                    (obj4l, obj4r) <- objToTuple Nothing obj3
-                    return $ ForkUweIO obj4l obj4r) of
-    (Left _) -> Nothing
-    (Right x) -> Just x
+                    (obj4l, obj4r) <- ignoringConversion objToTuple Nothing obj3
+                    return $ ForkUweIO obj4l obj4r

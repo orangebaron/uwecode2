@@ -10,8 +10,8 @@ type Conversion a = Depth -> UweObj -> Either UweObj a
 type IgnoringConversion a = Depth -> UweObj -> Maybe a
 type EncodingCriteria a = UweObjEncoding -> Maybe a
 
-conversionToIgnoringConversion :: Conversion a -> IgnoringConversion a
-conversionToIgnoringConversion conv depth obj = either (const Nothing) Just $ conv depth obj
+ignoringConversion :: Conversion a -> IgnoringConversion a
+ignoringConversion conv depth obj = either (const Nothing) Just $ conv depth obj
 
 criteriaToConversion :: [Maybe (Criteria a)] -> Conversion a
 criteriaToConversion (firstCriteria:restCriteria) depth obj0 = tryToSimplify (helper 0) firstCriteria obj0 where

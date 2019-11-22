@@ -22,7 +22,9 @@ funcLiteral :: Parser ExpressionAST
 funcLiteral = separatedBy word arrowToken expression FuncLiteral
 
 wordExpression :: Parser ExpressionAST
-wordExpression = fmap Word word
+wordExpression = do
+    w <- word
+    if w == "=" then empty else return (Word w)
 
 numLiteral :: Parser ExpressionAST
 numLiteral = fmap NumLiteral number
@@ -44,9 +46,9 @@ parenEnclosedExpression :: Parser ExpressionAST
 parenEnclosedExpression = token $ do
     specificChar '('
     enclosed <- enclosedParser $ EnclosedState ')'
-    case (expression `parse` enclosed) of
-        (Just (expr, "")) -> return expr
-        _                 -> empty
+    case (expression `takeFirstParse` enclosed) of
+        (Just expr) -> return expr
+        _           -> empty
 
 fixString :: String -> String
 fixString ('\\':'x':a:b:c:s) = (maybe ("\\x"++(a:b:c:"")) id $ do

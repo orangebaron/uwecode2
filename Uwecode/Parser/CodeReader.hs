@@ -7,13 +7,9 @@ import qualified Data.Map as Map
 import Control.Monad
 
 code :: Parser CodeAST
-code = Parser (\cs -> do
-    (strs, remaining) <- parse separateDeclarations cs
-    decls <- declStringsToCode strs
-    return (decls, remaining))
+code = listed equalsDeclaration
 
 readUweString :: String -> Maybe GlobalVarMap
 readUweString str = do
-    (codeAST, remaining) <- code `parse` str
-    guard $ remaining == ""
+    codeAST <- code `takeFirstParse` str
     readCodeAST Map.empty codeAST

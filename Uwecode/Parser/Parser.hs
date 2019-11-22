@@ -7,10 +7,10 @@ import Control.Monad
 import Control.Applicative
 import Numeric.Natural
 
-data Parser a = Parser { parse :: String -> Maybe (a, String) }
+data Parser a = Parser { parse :: String -> [(a, String)] }
 
 instance Monad Parser where
-    return a = Parser (\s -> Just (a, s))
+    return a = Parser (\s -> [(a, s)])
     p >>= f  = Parser (\s -> do
         (a, s2) <- parse p s
         parse (f a) s2)
@@ -25,15 +25,20 @@ instance Applicative Parser where
         parse (fmap f b) s2)
 
 instance Alternative Parser where
-    empty = Parser $ const Nothing
+    empty = Parser $ const []
     p1 <|> p2 = Parser (\s -> parse p1 s <|> parse p2 s)
 
 instance MonadPlus Parser
 
+takeFirstParse :: Parser a -> String -> Maybe a
+takeFirstParse parser str = case (filter ((== "") . snd) $ parser `parse` str) of
+    []        -> Nothing
+    ((a,_):_) -> Just a
+
 singleChar :: Parser Char
 singleChar = Parser (\s -> case s of -- TODO: use case more in other stuff :)
-    "" -> Nothing
-    (c:s2) -> Just (c, s2))
+    ""     -> []
+    (c:s2) -> [(c, s2)])
 
 charSatisfies :: (Char -> Bool) -> Parser Char
 charSatisfies f = do
@@ -56,7 +61,7 @@ listed p = oneOrMoreListed p <|> return []
 
 oneOrMoreListed :: Parser a -> Parser [a]
 oneOrMoreListed p = do
-    a <- p
+    a  <- p
     as <- listed p
     return (a:as)
 
@@ -78,8 +83,8 @@ space = oneOrMoreIn spaceChars
 
 wantEmpty :: a -> Parser a
 wantEmpty a = Parser (\s -> case s of
-    "" -> Just (a, "")
-    _  -> Nothing)
+    "" -> [(a, "")]
+    _  -> [])
 
 afterToken :: Parser String
 afterToken = space <|> wantEmpty ""

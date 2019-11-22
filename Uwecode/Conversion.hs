@@ -3,6 +3,7 @@ module Uwecode.Conversion where
 import Uwecode.UweObj
 import Uwecode.BasicUweObjs
 import Uwecode.Simplify
+import Uwecode.IO
 import GHC.Natural
 import Data.Either
 
@@ -180,3 +181,24 @@ objToString = encCriteriaAndEitherFuncToConversion criteria helper where
         chr <- objToChar depth c
         str <- listToStr depth s
         return (chr:str)
+
+objToIO :: IgnoringConversion UweIO
+objToIO depth obj = do
+    either1 <- ignoringConversion objToEither depth obj
+    case either1 of
+        (Left obj2) -> do
+            either2 <- ignoringConversion objToEither depth obj2
+            case either2 of
+                (Left obj3)  -> return $ InputUweIO $ objToIO depth . call obj3
+                (Right obj3) -> do
+                    (obj4l,  obj4r)  <- ignoringConversion objToTuple depth obj3
+                    (obj4ll, obj4lr) <- ignoringConversion objToTuple depth obj4l
+                    n <- ignoringConversion objToNumber depth obj4ll
+                    return $ OutputUweIO n obj4ll $ objToIO depth obj4r
+        (Right obj2) -> do
+            maybe2 <- ignoringConversion objToMaybe depth obj2
+            case maybe2 of
+                Nothing -> return NullUweIO
+                (Just obj3) -> do
+                    (obj4l, obj4r) <- ignoringConversion objToTuple depth obj3
+                    return $ ForkUweIO (objToIO depth obj4l) (objToIO depth obj4r)

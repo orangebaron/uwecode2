@@ -50,3 +50,8 @@ stdController otpFs = UweController giveInp takeOtp newThr doneWProc where
 
     doneWProc :: ThreadState -> IO ()
     doneWProc state = modifyIORef (takenThreads state) (S.delete $ threadNum state)
+
+newThreadState :: IO ThreadState
+newThreadState = do
+    ref <- newIORef $ S.singleton 0
+    return $ ThreadState 0 (churchNum 0) ref

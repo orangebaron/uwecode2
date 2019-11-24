@@ -9,14 +9,11 @@ import Prelude.SafeEnum as SE
 import Text.Read
 import qualified Data.Map as Map
 
-subNormalCallExpression :: Parser ExpressionAST
-subNormalCallExpression = quotedLiteralExpression <|> numLiteral <|> wordExpression
-
 subBacktickCallExpression :: Parser ExpressionAST
-subBacktickCallExpression = normalCall <|> subNormalCallExpression
+subBacktickCallExpression = normalCall <|> quotedLiteralExpression <|> numLiteral <|> wordExpression
 
 expression :: Parser ExpressionAST
-expression = parenEnclosedExpressionCall <|> parenEnclosedExpression <|> funcLiteral <|> backtickCall <|> subBacktickCallExpression
+expression = parenEnclosedExpression <|> funcLiteral <|> backtickCall <|> subBacktickCallExpression
 
 funcLiteral :: Parser ExpressionAST
 funcLiteral = separatedBy word arrowToken expression FuncLiteral
@@ -38,17 +35,16 @@ backtickCall = do
 
 normalCall :: Parser ExpressionAST
 normalCall = do
-    a <- subNormalCallExpression
-    b <- expression
-    return $ Called a b
+    s <- stringsEndingInSpaceLongFirst
+    e2 <- expression
+    e1 <- returnGoodFromParse expression s
+    return $ Called e1 e2
 
 parenEnclosedExpression :: Parser ExpressionAST
 parenEnclosedExpression = token $ do
     specificChar '('
     enclosed <- enclosedParser $ EnclosedState ')'
-    case (expression `takeFirstParse` enclosed) of
-        (Just expr) -> return expr
-        _           -> empty
+    returnGoodFromParse expression enclosed
 
 fixString :: String -> String
 fixString ('\\':'x':a:b:c:s) = (maybe ("\\x"++(a:b:c:"")) id $ do
@@ -72,9 +68,3 @@ quotedLiteralExpression = token $ do
     case (makeQuotedExpr s (c == doubleQuote)) of
         (Just x) -> return x
         Nothing  -> empty
-
-parenEnclosedExpressionCall :: Parser ExpressionAST
-parenEnclosedExpressionCall = do
-    a <- parenEnclosedExpression
-    b <- expression
-    return $ Called a b

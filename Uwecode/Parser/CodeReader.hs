@@ -9,7 +9,10 @@ import Control.Monad
 code :: Parser CodeAST
 code = listed equalsDeclaration
 
+varMap :: Parser GlobalVarMap
+varMap = do
+    codeAST <- code
+    maybeReturn $ readCodeAST Map.empty codeAST
+
 readUweString :: String -> Maybe GlobalVarMap
-readUweString str = do
-    codeAST <- code `takeFirstParse` str
-    readCodeAST Map.empty codeAST
+readUweString = takeFirstParse varMap

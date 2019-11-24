@@ -35,6 +35,15 @@ takeFirstParse parser str = case (filter ((== "") . snd) $ parser `parse` str) o
     []        -> Nothing
     ((a,_):_) -> Just a
 
+returnList :: [a] -> Parser a
+returnList l = Parser (\s -> map (\x -> (x, s)) l)
+
+returnGoodFromParse :: Parser a -> String -> Parser a
+returnGoodFromParse parser str = returnList . map fst . filter (\x -> snd x == "") $ parser `parse` str
+
+maybeReturn :: Maybe a -> Parser a
+maybeReturn = maybe empty return
+
 singleChar :: Parser Char
 singleChar = Parser (\s -> case s of -- TODO: use case more in other stuff :)
     ""     -> []
@@ -81,6 +90,9 @@ oneOrMoreIn cs = oneOrMoreListed $ charSatisfies (`elem` cs)
 space :: Parser String
 space = oneOrMoreIn spaceChars
 
+nonSpaces :: Parser String
+nonSpaces = oneOrMoreListed $ charSatisfies $ not . (`elem` spaceChars)
+
 wantEmpty :: a -> Parser a
 wantEmpty a = Parser (\s -> case s of
     "" -> [(a, "")]
@@ -110,3 +122,14 @@ number = token $ do
     return $ read numStr
 
 backtickPrefacedWord = specificChar backtick >> word
+
+stringsEndingInSpaceShortFirst :: Parser String
+stringsEndingInSpaceShortFirst = do
+    s1 <- nonSpaces
+    s2 <- space
+    return (s1 ++ s2) <|> do
+        s3 <- stringsEndingInSpaceShortFirst
+        return (s1 ++ s2 ++ s3)
+
+stringsEndingInSpaceLongFirst :: Parser String
+stringsEndingInSpaceLongFirst = Parser $ reverse . parse stringsEndingInSpaceShortFirst

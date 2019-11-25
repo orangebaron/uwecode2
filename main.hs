@@ -11,5 +11,4 @@ readCode str = readUweString str >>= (!? "main") >>= (objToIO Nothing)
 
 main = do
     str <- readFile "main.uwe"
-    state <- makeThreadState
-    runStateT (runMaybeIO [printIO] (lift $ putStrLn "thread done") $ readCode str) state
+    startRunAndCleanupProcess [printIO, getThreadNumIO, delayIO] (lift $ putStrLn "thread done") $ readCode str

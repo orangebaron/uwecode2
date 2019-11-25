@@ -8,4 +8,8 @@ otp = n -> x -> f -> left (right (tup (tup n x) f))
 fork = f -> g -> right (just (tup f g))
 stop = right nothing
 
-main = otp 0 880654 stop
+print = msg -> next -> otp 0 msg next
+getThreadNum = next -> otp 1 0 (inp next)
+delay = n -> next -> otp 2 n next
+printThreadNum = next -> getThreadNum (f -> print f next)
+main = fork (printThreadNum stop) (printThreadNum (delay 880654 (printThreadNum stop)))

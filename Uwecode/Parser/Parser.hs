@@ -65,14 +65,18 @@ specificString (c:s) = do
     specificString s
     return (c:s)
 
+nOrMoreListed :: Natural -> Parser a -> Parser [a]
+nOrMoreListed 0 p = oneOrMoreListed p <|> return []
+nOrMoreListed n p = do
+    a <- p
+    as <- nOrMoreListed (n-1) p
+    return (a:as)
+
 listed :: Parser a -> Parser [a]
-listed p = oneOrMoreListed p <|> return []
+listed = nOrMoreListed 0
 
 oneOrMoreListed :: Parser a -> Parser [a]
-oneOrMoreListed p = do
-    a  <- p
-    as <- listed p
-    return (a:as)
+oneOrMoreListed = nOrMoreListed 1
 
 separatedBy :: Parser a -> Parser b -> Parser c -> (a -> c -> d) -> Parser d
 separatedBy p1 p2 p3 f = do
@@ -89,9 +93,6 @@ oneOrMoreIn cs = oneOrMoreListed $ charSatisfies (`elem` cs)
 
 space :: Parser String
 space = oneOrMoreIn spaceChars
-
-nonSpaces :: Parser String
-nonSpaces = oneOrMoreListed $ charSatisfies $ not . (`elem` spaceChars)
 
 wantEmpty :: a -> Parser a
 wantEmpty a = Parser (\s -> case s of
@@ -122,14 +123,3 @@ number = token $ do
     return $ read numStr
 
 backtickPrefacedWord = specificChar backtick >> word
-
-stringsEndingInSpaceShortFirst :: Parser String
-stringsEndingInSpaceShortFirst = do
-    s1 <- nonSpaces
-    s2 <- space
-    return (s1 ++ s2) <|> do
-        s3 <- stringsEndingInSpaceShortFirst
-        return (s1 ++ s2 ++ s3)
-
-stringsEndingInSpaceLongFirst :: Parser String
-stringsEndingInSpaceLongFirst = Parser $ reverse . parse stringsEndingInSpaceShortFirst

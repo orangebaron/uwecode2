@@ -9,11 +9,14 @@ import Prelude.SafeEnum as SE
 import Text.Read
 import qualified Data.Map as Map
 
+subNormalCallExpression :: Parser ExpressionAST
+subNormalCallExpression = quotedLiteralExpression <|> numLiteral <|> wordExpression <|> parenEnclosedExpression
+
 subBacktickCallExpression :: Parser ExpressionAST
-subBacktickCallExpression = normalCall <|> quotedLiteralExpression <|> numLiteral <|> wordExpression
+subBacktickCallExpression = normalCall <|> subNormalCallExpression
 
 expression :: Parser ExpressionAST
-expression = parenEnclosedExpression <|> funcLiteral <|> backtickCall <|> subBacktickCallExpression
+expression = funcLiteral <|> backtickCall <|> subBacktickCallExpression
 
 funcLiteral :: Parser ExpressionAST
 funcLiteral = separatedBy word arrowToken expression FuncLiteral
@@ -34,11 +37,10 @@ backtickCall = do
     return $ Called (Called (Word b) a) c
 
 normalCall :: Parser ExpressionAST
-normalCall = do
-    s <- stringsEndingInSpaceLongFirst
-    e2 <- expression
-    e1 <- returnGoodFromParse expression s
-    return $ Called e1 e2
+normalCall = nOrMoreListed 2 subNormalCallExpression >>= (return . helper . reverse) where
+    helper :: [ExpressionAST] -> ExpressionAST
+    helper [a] = a
+    helper (a:b) = Called (helper b) a
 
 parenEnclosedExpression :: Parser ExpressionAST
 parenEnclosedExpression = token $ do

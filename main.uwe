@@ -1,0 +1,11 @@
+left = x -> a -> b -> a x
+right = x -> a -> b -> b x
+tup = x -> y -> a -> a x y
+just = left
+nothing = 0
+inp = f -> left (left f)
+otp = n -> x -> f -> left (right (tup (tup n x) f))
+fork = f -> g -> right (just (tup f g))
+stop = right nothing
+
+main = otp 0 880654 stop

@@ -80,6 +80,7 @@ objToTuple = encodingCriteriaToConversion [Just criteria1, Just criteria2] where
         result _ = Nothing
         result2 (UweObjEncoding "arbitraryVal" [0] []) d = Just (d, b)
         result2 _ _ = Nothing
+    criteria2 _ = Nothing
 
 objToMaybe :: Conversion (Maybe UweObj)
 objToMaybe = encodingCriteriaToConversion [Just criteria1, Nothing, Just criteria2] where

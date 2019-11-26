@@ -95,6 +95,53 @@ calledChurchNum n x = me where
     _replaceBindings vs = calledChurchNum n $ replaceBindings x vs
     _asEncoding = UweObjEncoding "calledChurchNum" [n] [x]
 
+makeChurchTupObj :: UweObj -> UweObj -> UweObj
+makeChurchTupObj x y = function 0 $ called (called (returnVal 0) x) y
+
+makeMaybeObj :: Maybe UweObj -> UweObj
+makeMaybeObj Nothing = churchNum 0
+makeMaybeObj (Just x) = function 0 $ function 1 $ called (returnVal 0) x
+
+makeListObj :: UweObj -> UweObj -> UweObj
+makeListObj head rest = makeMaybeObj $ Just $ makeChurchTupObj head rest
+
+emptyListObj :: UweObj
+emptyListObj = makeMaybeObj Nothing
+
+makeBoolObj :: Bool -> UweObj
+makeBoolObj a = function 0 $ function 1 $ returnVal (if a then 0 else 1)
+
+tupleChar :: Char -> UweObj
+tupleChar chr = me where
+    me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding
+    _simplify = const me
+    _call = call meObj
+    _replace = const $ const me
+    _allVars = Set.empty
+    _unboundVars = const Set.empty
+    _replaceBindings = const me
+    _asEncoding = UweObjEncoding ("tupleChar: "++[chr]) [] []
+    bools :: [UweObj]
+    bools = map (makeBoolObj . (== 1) . (`mod` 2) . (fromEnum chr `div`) . (2 ^)) [0..7]
+    boolTups :: [UweObj] -> [UweObj]
+    boolTups l = map (\n -> (l !! (2*n + 1)) `makeChurchTupObj` (l !! (2*n))) [0..(length l `div` 2)]
+    meObj :: UweObj
+    meObj = head $ boolTups $ boolTups $ boolTups bools
+
+tupleCharStr :: String -> UweObj
+tupleCharStr "" = emptyListObj
+tupleCharStr str@(chr:rest) = me where
+    me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding
+    _simplify = const me
+    _call = call meObj
+    _replace = const $ const me
+    _allVars = Set.empty
+    _unboundVars = const Set.empty
+    _replaceBindings = const me
+    _asEncoding = UweObjEncoding ("tupleCharStr: "++str) [] []
+    meObj :: UweObj
+    meObj = makeListObj (tupleChar chr) (tupleCharStr rest)
+
 arbitraryVal :: Natural -> UweObj
 arbitraryVal n = me where
     me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding

@@ -18,7 +18,7 @@ setInpMsg msg = do
     put $ ThreadState (threadNum state) msg (takenThreads state)
 
 printIO :: UweObj -> UweIOMonad ()
-printIO = lift . print
+printIO = maybe unsuccessful (lift . putStrLn) . ignoringConversion objToString Nothing
 
 getThreadNumIO :: a -> UweIOMonad ()
 getThreadNumIO = const $ do

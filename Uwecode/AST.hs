@@ -39,8 +39,8 @@ makeFunctionVar (VarMap map1 map2) var = case (map1 !? var) of
 readExpressionAST :: VarMap -> ExpressionAST -> Maybe UweObj
 readExpressionAST map (Word var) = getVar map var
 readExpressionAST map (NumLiteral n) = Just $ churchNum n
-readExpressionAST map (CharLiteral c) = Just $ returnVal 0 --TODO
-readExpressionAST map (StrLiteral s) = Just $ returnVal 0 -- TODO
+readExpressionAST map (CharLiteral c) = Just $ tupleChar c
+readExpressionAST map (StrLiteral s) = Just $ tupleCharStr s
 readExpressionAST map (FuncLiteral var exp) = (readExpressionAST newMap exp) >>= (return . function n) where (newMap, n) = makeFunctionVar map var
 readExpressionAST map (Called exp1 exp2) = do
     obj1 <- readExpressionAST map exp1

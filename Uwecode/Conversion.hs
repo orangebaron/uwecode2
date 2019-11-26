@@ -118,8 +118,15 @@ objToChar = encCriteriaAndEitherFuncToConversion criteria helper where
     helper :: Depth -> UweObj -> Either UweObj Char
     convToInt :: [Bool] -> Int
 
-    criteria (UweObjEncoding "char" [n] []) = Just $ toEnum $ naturalToInt n
-    criteria _ = Nothing
+    criteria (UweObjEncoding objStr [] [])
+        | take lenStr objStr == str = chr
+        | otherwise = Nothing
+        where
+            str = "tupleChar: "
+            lenStr = length str
+            chr = case (drop lenStr objStr) of
+                [c] -> Just c
+                _   -> Nothing
 
     helper depth objSimp = do
         (l, r)     <- objToTuple depth objSimp
@@ -164,24 +171,24 @@ objToString :: Conversion String
 objToString = encCriteriaAndEitherFuncToConversion criteria helper where
     criteria :: EncodingCriteria String
     helper :: Depth -> UweObj -> Either UweObj String
-    listToStr :: Depth -> [UweObj] -> Either UweObj String
 
     criteria (UweObjEncoding objStr [] [])
         | take lenStr objStr == str = Just $ drop lenStr objStr
         | otherwise = Nothing
         where
-            str = "string "
+            str = "tupleCharStr: "
             lenStr = length str
+    criteria _ = Nothing
 
     helper depth objSimp = do
-        list <- objToList depth objSimp
-        listToStr depth list
-
-    listToStr _ [] = Right ""
-    listToStr depth (c:s) = do
-        chr <- objToChar depth c
-        str <- listToStr depth s
-        return (chr:str)
+        maybe <- objToMaybe depth objSimp
+        case maybe of
+            Nothing -> return ""
+            (Just x) -> do
+                (chr, rest) <- objToTuple depth x
+                c <- objToChar depth chr
+                s <- objToString depth rest
+                return (c:s)
 
 objToIO :: IgnoringConversion UweIO
 objToIO depth obj = do

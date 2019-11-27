@@ -3,12 +3,11 @@ import Uwecode.Conversion
 import Uwecode.Parser.CodeReader
 import Uwecode.IO
 import Uwecode.StdIOs
+import Uwecode.ReadFile
 import Data.Map
 import Control.Monad.State
-
-readCode :: String -> Maybe UweIO
-readCode str = readUweString str >>= (!? "main") >>= (objToIO Nothing)
+import Control.Monad.Trans.Maybe
 
 main = do
-    str <- readFile "main.uwe"
-    startRunAndCleanupProcess [printIO, getThreadNumIO, delayIO] (lift $ putStrLn "thread done") $ readCode str
+    io <- runMaybeT $ getMainIOFromFile "main.uwe" Nothing
+    startRunAndCleanupProcess [printIO, getThreadNumIO, delayIO] (lift $ putStrLn "thread done") io

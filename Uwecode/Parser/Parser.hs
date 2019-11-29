@@ -111,9 +111,6 @@ token p = do
 stringToken :: String -> Parser String
 stringToken = token . specificString
 
-arrowToken = stringToken arrowStr
-equalsToken = stringToken equalsStr
-
 word :: Parser String
 word = token $ oneOrMoreIn wordChars
 

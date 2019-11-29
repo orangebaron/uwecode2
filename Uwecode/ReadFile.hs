@@ -20,7 +20,7 @@ getDictFromFile file = do
 getMainObjFromFile :: FilePath -> MaybeT IO UweObj
 getMainObjFromFile file = do
     dict <- getDictFromFile file
-    maybeToMaybeT $ dict !? "main"
+    maybeToMaybeT $ getGlobalVar dict "main"
 
 getMainIOFromFile :: FilePath -> Depth -> MaybeT IO UweIO
 getMainIOFromFile file depth = do

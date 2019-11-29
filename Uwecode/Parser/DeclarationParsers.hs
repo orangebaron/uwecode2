@@ -10,7 +10,10 @@ import Control.Applicative
 import Control.Monad
 
 declaration :: Parser DeclarationAST
-declaration = equalsDeclaration
+declaration = equalsDeclaration <|> privateEqualsDeclaration
 
 equalsDeclaration :: Parser DeclarationAST
-equalsDeclaration = separatedBy word equalsToken expression Equals
+equalsDeclaration = separatedBy word (stringToken equalsStr) expression (Equals True)
+
+privateEqualsDeclaration :: Parser DeclarationAST
+privateEqualsDeclaration = separatedBy word (stringToken privateEqualsStr) expression (Equals False)

@@ -5,26 +5,34 @@ import Uwecode.BasicUweObjs
 import Control.Applicative
 import Numeric.Natural
 import Data.Map as Map
+import Data.Maybe
 
 data ExpressionAST = Word String | NumLiteral Natural | CharLiteral Char | StrLiteral String | FuncLiteral String ExpressionAST | Called ExpressionAST ExpressionAST deriving (Show)
 
-data DeclarationAST = Equals String ExpressionAST deriving (Show)
+data DeclarationAST = Equals Bool String ExpressionAST | Import FilePath String [String]
 
 type CodeAST = [DeclarationAST]
 
-type GlobalVarMap = Map String UweObj
+data GlobalVarMap = GlobalVarMap { privateVars :: Map String UweObj, publicVars :: Map String UweObj }
 
-setGlobalVar :: GlobalVarMap -> String -> UweObj -> Maybe GlobalVarMap
-setGlobalVar map var obj
-    | member var map = Nothing
-    | otherwise      = Just $ insert var obj map
+emptyGlobalVarMap :: GlobalVarMap
+emptyGlobalVarMap = GlobalVarMap Map.empty Map.empty
+
+getGlobalVar :: GlobalVarMap -> String -> Maybe UweObj
+getGlobalVar (GlobalVarMap map1 map2) var = (if member var map2 then map2 else map1) !? var
+
+setGlobalVar :: GlobalVarMap -> Bool -> String -> UweObj -> Maybe GlobalVarMap
+setGlobalVar map@(GlobalVarMap map1 map2) isPublic var obj
+    | isJust $ getGlobalVar map var = Nothing
+    | isPublic  = Just $ GlobalVarMap map1 (insert var obj map2)
+    | otherwise = Just $ GlobalVarMap (insert var obj map1) map2
 
 data VarMap = VarMap { functionVars :: Map String UweVar, globalVars :: GlobalVarMap }
 
-emptyVarMap = VarMap Map.empty Map.empty
+emptyVarMap = VarMap Map.empty emptyGlobalVarMap
 
 getVar :: VarMap -> String -> Maybe UweObj
-getVar (VarMap map1 map2) var = (fmap returnVal (map1 !? var)) <|> (map2 !? var)
+getVar (VarMap map1 map2) var = (fmap returnVal (map1 !? var)) <|> (getGlobalVar map2 var)
 
 makeFunctionVar :: VarMap -> String -> (VarMap, UweVar)
 makeFunctionVar (VarMap map1 map2) var = case (map1 !? var) of
@@ -48,9 +56,9 @@ readExpressionAST map (Called exp1 exp2) = do
     return $ called obj1 obj2
 
 readDeclarationAST :: GlobalVarMap -> DeclarationAST -> Maybe GlobalVarMap
-readDeclarationAST map (Equals var exp) = do
+readDeclarationAST map (Equals isPublic var exp) = do
     obj <- readExpressionAST (VarMap Map.empty map) exp
-    newMap <- setGlobalVar map var obj
+    newMap <- setGlobalVar map isPublic var obj
     return newMap
 
 readCodeAST :: GlobalVarMap -> CodeAST -> Maybe GlobalVarMap

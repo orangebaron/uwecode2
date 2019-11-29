@@ -19,12 +19,12 @@ expression :: Parser ExpressionAST
 expression = funcLiteral <|> backtickCall <|> subBacktickCallExpression
 
 funcLiteral :: Parser ExpressionAST
-funcLiteral = separatedBy word arrowToken expression FuncLiteral
+funcLiteral = separatedBy word (stringToken arrowStr) expression FuncLiteral
 
 wordExpression :: Parser ExpressionAST
 wordExpression = do
     w <- word
-    if w == "=" then empty else return (Word w)
+    if elem w keywords then empty else return (Word w)
 
 numLiteral :: Parser ExpressionAST
 numLiteral = fmap NumLiteral number

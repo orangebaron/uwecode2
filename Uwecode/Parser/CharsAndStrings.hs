@@ -4,6 +4,8 @@ import Data.Map
 
 arrowStr = "->"
 equalsStr = "="
+privateEqualsStr = "_="
+keywords = [arrowStr, equalsStr, privateEqualsStr]
 spaceChars = [' ', '\t', '\r', '\n']
 numChars = ['0'..'9']
 alphaChars = ['a'..'z'] ++ ['A'..'Z']

@@ -65,6 +65,9 @@ specificString (c:s) = do
     specificString s
     return (c:s)
 
+optionally :: Parser a -> Parser (Maybe a)
+optionally p = fmap Just p <|> return Nothing
+
 nOrMoreListed :: Natural -> Parser a -> Parser [a]
 nOrMoreListed 0 p = oneOrMoreListed p <|> return []
 nOrMoreListed n p = do
@@ -93,6 +96,9 @@ oneOrMoreIn cs = oneOrMoreListed $ charSatisfies (`elem` cs)
 
 space :: Parser String
 space = oneOrMoreIn spaceChars
+
+nonSpaces :: Parser String
+nonSpaces = oneOrMoreListed $ charSatisfies $ not . (`elem` spaceChars)
 
 wantEmpty :: a -> Parser a
 wantEmpty a = Parser (\s -> case s of

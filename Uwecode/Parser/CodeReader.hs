@@ -6,7 +6,7 @@ import Uwecode.Parser.DeclarationParsers
 import Control.Monad
 
 code :: Parser CodeAST
-code = listed equalsDeclaration
+code = listed declaration
 
 varMap :: Parser GlobalVarMap
 varMap = do

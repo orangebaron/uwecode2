@@ -9,7 +9,7 @@ import Data.Maybe
 
 data ExpressionAST = Word String | NumLiteral Natural | CharLiteral Char | StrLiteral String | FuncLiteral String ExpressionAST | Called ExpressionAST ExpressionAST deriving (Show)
 
-data DeclarationAST = Equals Bool String ExpressionAST | Import FilePath String [String]
+data DeclarationAST = Equals Bool String ExpressionAST | Import FilePath String [String] deriving (Show)
 
 type CodeAST = [DeclarationAST]
 

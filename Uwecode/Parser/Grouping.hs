@@ -5,7 +5,6 @@ import Uwecode.Parser.CharsAndStrings
 import Data.Map
 
 data QuotedState   = QuotedState { isStr :: Bool, isBackticked :: Bool }
-data EnclosedState = EnclosedState { endingChar :: Char }
 
 isLastQuoteChr :: QuotedState -> Char -> Bool
 isLastQuoteChr state c
@@ -24,21 +23,21 @@ quotedParser state = do
         s <- quotedParser $ transformQuoteState state c
         return (c:s)
 
-enclosedParser :: EnclosedState -> Parser String
-enclosedParser state = do
+enclosedParser :: Char -> Parser String
+enclosedParser endingChar = do
     c <- singleChar
     if elem c quotes
         then do
             s <- quotedParser $ QuotedState (c == doubleQuote) False
-            s2 <- enclosedParser state
+            s2 <- enclosedParser endingChar
             return ((c:s) ++ (c:s2))
     else if member c enclosers
         then do
-            s <- enclosedParser $ EnclosedState $ enclosers ! c
-            s2 <- enclosedParser state
+            s <- enclosedParser (enclosers ! c)
+            s2 <- enclosedParser endingChar
             return ((c:s) ++ (enclosers ! c):s2)
-    else if c == (endingChar state)
+    else if c == endingChar
         then return ""
     else do
-        s2 <- enclosedParser state
+        s2 <- enclosedParser endingChar
         return (c:s2)

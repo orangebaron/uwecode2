@@ -45,7 +45,7 @@ normalCall = nOrMoreListed 2 subNormalCallExpression >>= (return . helper . reve
 parenEnclosedExpression :: Parser ExpressionAST
 parenEnclosedExpression = token $ do
     specificChar '('
-    enclosed <- enclosedParser $ EnclosedState ')'
+    enclosed <- enclosedParser ')'
     returnGoodFromParse expression enclosed
 
 fixString :: String -> String

@@ -10,10 +10,23 @@ import Control.Applicative
 import Control.Monad
 
 declaration :: Parser DeclarationAST
-declaration = equalsDeclaration <|> privateEqualsDeclaration
+declaration = equalsDeclaration <|> privateEqualsDeclaration <|> importDeclaration
 
 equalsDeclaration :: Parser DeclarationAST
 equalsDeclaration = separatedBy word (stringToken equalsStr) expression (Equals True)
 
 privateEqualsDeclaration :: Parser DeclarationAST
 privateEqualsDeclaration = separatedBy word (stringToken privateEqualsStr) expression (Equals False)
+
+importDeclaration :: Parser DeclarationAST
+importDeclaration = token $ do
+    specificChar '{'
+    enclosed <- enclosedParser '}'
+    returnGoodFromParse insideImportDeclaration enclosed
+
+insideImportDeclaration :: Parser DeclarationAST
+insideImportDeclaration = do
+    file <- token nonSpaces
+    prefix <- optionally $ stringToken importPrefixStr >> word
+    ignore <- optionally $ stringToken importIgnoreStr >> oneOrMoreListed word
+    return $ Import file (maybe "" id prefix) (maybe [] id ignore)

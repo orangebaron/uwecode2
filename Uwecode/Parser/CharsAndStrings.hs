@@ -2,6 +2,8 @@ module Uwecode.Parser.CharsAndStrings where
 
 import Data.Map
 
+importPrefixStr = "+"
+importIgnoreStr = "-"
 arrowStr = "->"
 equalsStr = "="
 privateEqualsStr = "_="

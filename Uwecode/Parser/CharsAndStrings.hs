@@ -3,7 +3,7 @@ module Uwecode.Parser.CharsAndStrings where
 import Data.Map
 
 importPrefixStr = "+"
-importIgnoreStr = "-"
+importSpecificStr = ":"
 arrowStr = "->"
 equalsStr = "="
 privateEqualsStr = "_="

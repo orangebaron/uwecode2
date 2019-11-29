@@ -28,5 +28,5 @@ insideImportDeclaration :: Parser DeclarationAST
 insideImportDeclaration = do
     file <- token nonSpaces
     prefix <- optionally $ stringToken importPrefixStr >> word
-    ignore <- optionally $ stringToken importIgnoreStr >> oneOrMoreListed word
-    return $ Import file (maybe "" id prefix) (maybe [] id ignore)
+    specific <- optionally $ stringToken importSpecificStr >> oneOrMoreListed word
+    return $ Import file (maybe "" id prefix) (maybe [] id specific)

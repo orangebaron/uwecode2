@@ -1,9 +1,8 @@
 import Uwecode.UweObj
 import Uwecode.Conversion
-import Uwecode.Parser.CodeReader
+import Uwecode.CodeReader
 import Uwecode.IO
 import Uwecode.StdIOs
-import Uwecode.ReadFile
 import Data.Map
 import Control.Monad.State
 import Control.Monad.Trans.Maybe

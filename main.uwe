@@ -1,17 +1,7 @@
-left = x -> a -> b -> a x
-right = x -> a -> b -> b x
-tup = x -> y -> a -> a x y
-just = left
-nothing = 0
-inp = f -> left (left f)
-otp = n -> x -> f -> left (right (tup (tup n x) f))
-fork = f -> g -> right (just (tup f g))
-stop = right nothing
-
+{main2.uwe}
 sketchyNumToStr = n -> n (x -> "1") "0"
-
 print = msg -> next -> otp 0 msg next
 getThreadNum = next -> otp 1 0 (inp next)
 delay = n -> next -> otp 2 n next
 printThreadNum = next -> getThreadNum (f -> print (sketchyNumToStr f) next)
-main = fork (printThreadNum (print "hallo welt" stop)) (printThreadNum (delay 880654 (printThreadNum stop)))
+main = fork (printThreadNum (print "hello world" stop)) (printThreadNum (delay 880654 (printThreadNum stop)))

@@ -2,6 +2,7 @@ module Uwecode.Parser.CharsAndStrings where
 
 import Data.Map
 
+fileExtension = ".uwe"
 importPrefixStr = "+"
 importSpecificStr = ":"
 arrowStr = "->"

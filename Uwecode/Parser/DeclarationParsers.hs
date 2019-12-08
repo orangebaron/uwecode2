@@ -29,4 +29,4 @@ insideImportDeclaration = do
     file <- token nonSpaces
     prefix <- optionally $ stringToken importPrefixStr >> word
     specific <- optionally $ stringToken importSpecificStr >> oneOrMoreListed word
-    return $ Import file (maybe "" id prefix) (maybe [] id specific)
+    return $ Import (file ++ fileExtension) (maybe "" id prefix) (maybe [] id specific)

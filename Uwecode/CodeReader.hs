@@ -11,24 +11,34 @@ import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.Class
 import qualified Data.Map as M
 import System.FilePath
+import System.Directory
+import Data.Maybe
 
 maybeToMaybeT :: (Monad m) => Maybe a -> MaybeT m a
 maybeToMaybeT = MaybeT . return
 
-readDeclarationAST :: FilePath -> GlobalVarMap -> DeclarationAST -> MaybeT IO GlobalVarMap
+data FileContext = FileContext { thisFile :: FilePath, importedPath :: Maybe FileContext }
+
+checkForCircularDependency :: FilePath -> FileContext -> Bool
+checkForCircularDependency path context = (path /= thisFile context) && (maybe True (checkForCircularDependency path) $ importedPath context)
+
+readDeclarationAST :: FileContext -> GlobalVarMap -> DeclarationAST -> MaybeT IO GlobalVarMap
 readDeclarationAST _ map (Equals isPublic var exp) = maybeToMaybeT $ do
     obj <- readExpressionAST (VarMap M.empty map) exp
     newMap <- setGlobalVar map isPublic var obj
     return newMap
 
-readDeclarationAST currentFile oldVars (Import file prefix just) = do
-        (GlobalVarMap _ importedVars) <- getDictFromFile $ takeDirectory currentFile ++ "/" ++ file
-        maybeToMaybeT $ foldl (>>=) (return oldVars) $ map (\var vars -> do
-                obj <- importedVars M.!? var
-                setGlobalVar vars False (prefix++var) obj) $
-                        if (null just) then (M.keys importedVars) else just
+readDeclarationAST context oldVars (Import file prefix just) = do
+    filePath <- lift $ canonicalizePath $ takeDirectory (thisFile context) ++ "/" ++ file
+    guard $ checkForCircularDependency filePath context
+    (GlobalVarMap _ importedVars) <- getDictFromFile $ FileContext filePath $ Just context
+    maybeToMaybeT $ foldl (>>=) (return oldVars) $ map (\var vars -> do
+        obj <- importedVars M.!? var
+        setGlobalVar vars False (prefix++var) obj) $
+            if (null just) then (M.keys importedVars) else just
 
-readCodeAST :: FilePath -> GlobalVarMap -> CodeAST -> MaybeT IO GlobalVarMap
+
+readCodeAST :: FileContext -> GlobalVarMap -> CodeAST -> MaybeT IO GlobalVarMap
 readCodeAST _ map [] = maybeToMaybeT $ Just map
 readCodeAST file map (a:b) = do
     newMap <- readDeclarationAST file map a
@@ -37,22 +47,22 @@ readCodeAST file map (a:b) = do
 code :: Parser CodeAST
 code = listed declaration
 
-varMap :: FilePath -> Parser (MaybeT IO GlobalVarMap)
-varMap file = do
+varMap :: FileContext -> Parser (MaybeT IO GlobalVarMap)
+varMap context = do
     codeAST <- code
-    return $ readCodeAST file emptyGlobalVarMap codeAST
+    return $ readCodeAST context emptyGlobalVarMap codeAST
 
-readUweString :: FilePath -> String -> MaybeT IO GlobalVarMap
-readUweString file str = maybe (maybeToMaybeT Nothing) id $ varMap file `takeFirstParse` str
+readUweString :: FileContext -> String -> MaybeT IO GlobalVarMap
+readUweString context str = maybe (maybeToMaybeT Nothing) id $ varMap context `takeFirstParse` str
 
-getDictFromFile :: FilePath -> MaybeT IO GlobalVarMap
-getDictFromFile file = do
-    str <- lift $ readFile file
-    readUweString file str
+getDictFromFile :: FileContext -> MaybeT IO GlobalVarMap
+getDictFromFile context = do
+    str <- lift $ readFile $ thisFile context
+    readUweString context str
 
 getMainObjFromFile :: FilePath -> MaybeT IO UweObj
 getMainObjFromFile file = do
-    dict <- getDictFromFile file
+    dict <- getDictFromFile $ FileContext file Nothing
     maybeToMaybeT $ getGlobalVar dict "main"
 
 getMainIOFromFile :: FilePath -> Depth -> MaybeT IO UweIO

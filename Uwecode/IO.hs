@@ -57,7 +57,7 @@ unsuccessful :: UweIOMonad ()
 unsuccessful = lift $ hPutStr stderr "failed to simplify to expected value\n"
 
 runMaybeIO :: [UweObj -> UweIOMonad ()] -> UweIOMonad () -> Maybe UweIO -> UweIOMonad ()
-runMaybeIO fs close = maybe unsuccessful (runIO fs close)
+runMaybeIO fs close = maybe (unsuccessful >> runIO fs close NullUweIO) (runIO fs close)
 
 makeThreadState :: IO ThreadState
 makeThreadState = do

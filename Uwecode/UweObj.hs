@@ -6,6 +6,9 @@ import qualified Data.Set as Set
 type UweVar = Natural
 type Depth = Maybe Natural
 
+infiniteDepth :: Depth
+infiniteDepth = Nothing
+
 data UweObj = UweObj {
     simplify        :: Depth -> UweObj,
     call            :: UweObj -> UweObj,

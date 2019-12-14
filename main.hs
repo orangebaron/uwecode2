@@ -51,10 +51,9 @@ runUweFile :: FilePath -> MaybeT IO ()
 runUweFile path = do
     tmpPath <- makeUweFile path
     ghc <- ioMaybeToMaybeTIO $ findExecutable "ghc"
-    lift $ system $ ghc ++ " " ++ tmpPath ++ ".hs"
+    lift $ system $ ghc ++ " -no-keep-hi-files -no-keep-o-files " ++ tmpPath ++ ".hs"
     lift $ system $ "rm " ++ (tmpPath ++ ".hs")
     -- TODO break this into a different function or something
-    -- TODO remove .hi and .o
     lift $ system $ "./" ++ tmpPath
     lift $ system $ "rm " ++ tmpPath
     return ()

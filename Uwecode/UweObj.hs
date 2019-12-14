@@ -16,13 +16,14 @@ data UweObj = UweObj {
     allVars         :: Set.Set UweVar,
     unboundVars     :: Set.Set UweVar -> Set.Set UweVar,
     replaceBindings :: Set.Set UweVar -> UweObj,
-    asEncoding      :: UweObjEncoding }
+    asEncoding      :: UweObjEncoding,
+    asHsCode        :: String }
 
 instance Eq UweObj where
     a == b = asEncoding a == asEncoding b
 
 instance Show UweObj where
-    show = show . asEncoding
+    show = asHsCode
 
 data UweObjEncoding = UweObjEncoding String [Natural] [UweObj] deriving (Show, Eq)
 

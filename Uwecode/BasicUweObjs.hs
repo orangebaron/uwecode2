@@ -6,7 +6,7 @@ import qualified Data.Set as Set
 
 returnVal :: UweVar -> UweObj
 returnVal n = me where
-    me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding
+    me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode
     _simplify = const me
     _call = called me
     _replace m obj2
@@ -18,9 +18,11 @@ returnVal n = me where
         | otherwise = _allVars
     _replaceBindings = const me
     _asEncoding = UweObjEncoding "returnVal" [n] []
+    _asHsCode = "returnVal " ++ show n
+
 function :: UweVar -> UweObj -> UweObj
 function n x = me where
-    me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding
+    me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode
     _simplify (Just 0) = me
     _simplify depth = function n $ simplify x $ decrementDepth depth
     _call obj2
@@ -45,10 +47,11 @@ function n x = me where
             newN = smallestValueNotIn $ vs `Set.union` _allVars
             newX = replace x n $ returnVal newN
     _asEncoding = UweObjEncoding "function" [n] [x]
+    _asHsCode = "function " ++ show n ++ " (" ++ show x ++ ")"
 
 called :: UweObj -> UweObj -> UweObj
 called a b = me where
-    me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding
+    me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode
     _simplify (Just 0) = me
     _simplify depth
         | val1Diff  = simp val1
@@ -71,10 +74,11 @@ called a b = me where
     _unboundVars vs = unboundVars a vs `Set.union` unboundVars b vs
     _replaceBindings vs = called (replaceBindings a vs) (replaceBindings b vs)
     _asEncoding = UweObjEncoding "called" [] [a, b]
+    _asHsCode = "called (" ++ show a ++ ") (" ++ show b ++ ")"
 
 churchNum :: Natural -> UweObj
 churchNum n = me where
-    me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding
+    me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode
     _simplify = const me
     _call = calledChurchNum n
     _replace = const $ const me
@@ -82,11 +86,12 @@ churchNum n = me where
     _unboundVars = const Set.empty
     _replaceBindings = const me
     _asEncoding = UweObjEncoding "churchNum" [n] []
+    _asHsCode = "churchNum " ++ show n
 
 calledChurchNum :: Natural -> UweObj -> UweObj
 calledChurchNum 0 _ = function 0 $ returnVal 0
 calledChurchNum n x = me where
-    me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding
+    me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode
     _simplify = const me
     _call = (call x) . (called $ calledChurchNum (n-1) x)
     _replace m obj2 = calledChurchNum n $ replace x m obj2
@@ -94,6 +99,7 @@ calledChurchNum n x = me where
     _unboundVars = unboundVars x
     _replaceBindings vs = calledChurchNum n $ replaceBindings x vs
     _asEncoding = UweObjEncoding "calledChurchNum" [n] [x]
+    _asHsCode = "calledChurchNum " ++ show n ++ "(" ++ show x ++ ")"
 
 makeChurchTupObj :: UweObj -> UweObj -> UweObj
 makeChurchTupObj x y = function 0 $ called (called (returnVal 0) x) y
@@ -113,7 +119,7 @@ makeBoolObj a = function 0 $ function 1 $ returnVal (if a then 0 else 1)
 
 tupleChar :: Char -> UweObj
 tupleChar chr = me where
-    me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding
+    me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode
     _simplify = const me
     _call = call meObj
     _replace = const $ const me
@@ -121,6 +127,7 @@ tupleChar chr = me where
     _unboundVars = const Set.empty
     _replaceBindings = const me
     _asEncoding = UweObjEncoding ("tupleChar: "++[chr]) [] []
+    _asHsCode = "tupleChar " ++ show chr
     bools :: [UweObj]
     bools = map (makeBoolObj . (== 1) . (`mod` 2) . (fromEnum chr `div`) . (2 ^)) [0..7]
     boolTups :: [UweObj] -> [UweObj]
@@ -131,7 +138,7 @@ tupleChar chr = me where
 tupleCharStr :: String -> UweObj
 tupleCharStr "" = emptyListObj
 tupleCharStr str@(chr:rest) = me where
-    me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding
+    me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode
     _simplify = const me
     _call = call meObj
     _replace = const $ const me
@@ -139,12 +146,13 @@ tupleCharStr str@(chr:rest) = me where
     _unboundVars = const Set.empty
     _replaceBindings = const me
     _asEncoding = UweObjEncoding ("tupleCharStr: "++str) [] []
+    _asHsCode = "tupleCharStr " ++ show str
     meObj :: UweObj
     meObj = makeListObj (tupleChar chr) (tupleCharStr rest)
 
 arbitraryVal :: Natural -> UweObj
 arbitraryVal n = me where
-    me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding
+    me = UweObj _simplify _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode
     _simplify = const me
     _call = called me
     _replace = const $ const me
@@ -152,3 +160,4 @@ arbitraryVal n = me where
     _unboundVars = const Set.empty
     _replaceBindings = const me
     _asEncoding = UweObjEncoding "arbitraryVal" [n] []
+    _asHsCode = "arbitraryVal " ++ show n

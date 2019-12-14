@@ -13,7 +13,7 @@ import Control.Time
 type ThreadNum = Natural
 data ThreadState = ThreadState { threadNum :: ThreadNum, inpMsg :: UweObj, takenThreads :: IORef (S.Set Natural) }
 
-data UweIO = InputUweIO (UweObj -> (Maybe UweIO)) | OutputUweIO Natural UweObj (Maybe UweIO) | ForkUweIO (Maybe UweIO) (Maybe UweIO) | NullUweIO
+data UweIO = InputUweIO (UweObj -> Maybe UweIO) | OutputUweIO Natural UweObj (Maybe UweIO) | ForkUweIO (Maybe UweIO) (Maybe UweIO) | NullUweIO
 
 type UweIOMonad x = StateT ThreadState IO x
 

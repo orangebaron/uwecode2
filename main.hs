@@ -8,7 +8,7 @@ import Control.Monad.Trans.Class
 import Control.Monad.Trans.Maybe
 import System.IO
 import System.Environment
-import System.Cmd
+import System.Process
 import System.Directory
 import Data.Maybe
 import Data.List
@@ -51,7 +51,7 @@ runUweFile :: FilePath -> MaybeT IO ()
 runUweFile path = do
     tmpPath <- makeUweFile path
     ghc <- ioMaybeToMaybeTIO $ findExecutable "ghc"
-    lift $ system $ ghc ++ " -no-keep-hi-files -no-keep-o-files " ++ tmpPath ++ ".hs"
+    lift $ system $ ghc ++ " -no-keep-hi-files -no-keep-o-files " ++ tmpPath ++ ".hs" -- TODO look at exit code
     lift $ system $ "rm " ++ (tmpPath ++ ".hs")
     -- TODO break this into a different function or something
     lift $ system $ "./" ++ tmpPath

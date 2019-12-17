@@ -8,3 +8,6 @@ import System.IO
 
 getProjectIOs :: IO ([String], [String], String)
 getProjectIOs = return (["Uwecode.StdIOs", "Control.Monad.Trans.Class"], ["printIO", "getThreadNumIO", "delayIO"], "(lift $ putStrLn \"thread done\\n\")") --TODO
+
+optimizeObj :: UweObj -> IO ([String], String)
+optimizeObj obj = return ([], show obj)

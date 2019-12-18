@@ -29,7 +29,7 @@ readDeclarationAST _ map (Equals isPublic var exp) = maybeToMaybeT $ do
     return newMap
 
 readDeclarationAST context oldVars (Import file prefix just) = do
-    filePath <- lift $ canonicalizePath $ takeDirectory (thisFile context) ++ "/" ++ file
+    filePath <- lift $ canonicalizePath $ takeDirectory (thisFile context) </> file
     guard $ checkForCircularDependency filePath context
     (GlobalVarMap _ importedVars) <- getDictFromFile $ FileContext filePath $ Just context
     maybeToMaybeT $ foldl (>>=) (return oldVars) $ map (\var vars -> do

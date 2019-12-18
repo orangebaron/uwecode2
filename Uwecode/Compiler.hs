@@ -41,9 +41,9 @@ checkForFail mio = do
 
 makeUweFile :: FilePath -> MaybeT IO String
 makeUweFile path = do
-    (projImports, fs, close) <- lift $ getProjectIOs
+    (projImports, fs, close) <- lift $ getProjectIOs $ projectLocation path
     mainObj <- getMainObjFromFile path
-    (objImports, objString) <- lift $ optimizeObj mainObj
+    (objImports, objString) <- lift $ optimizeObj (projectLocation path) mainObj
     fileName <- lift $ figureOutGoodFileName $ takeFileName $ dropExtension $ path
     lift $ writeFile (fileName ++ ".hs") $ makeUweFileText (union projImports objImports) fs close objString
     return fileName

@@ -18,10 +18,15 @@ import System.FilePath
 showStrList :: [String] -> String
 showStrList s = '[' : (concat $ intersperse ", " s) ++ "]"
 
-makeUweFileText :: [String] -> [String] -> String -> String -> String
+makeImportStatements :: [(String, String)] -> String
+makeImportStatements = concat . map helper where
+    helper (i, "") = "import " ++ i ++ "\n"
+    helper (i, j)  = "import qualified " ++ i ++ " as " ++ j ++ "\n"
+
+makeUweFileText :: [(String, String)] -> [String] -> String -> String -> String
 makeUweFileText imports fs close obj = importsStr ++ "\nmain = startRunAndCleanupProcess " ++ showStrList fs ++ " " ++ close ++ " $ objToIO infiniteDepth $ " ++ obj ++ "\n" where
-    importsStr = concat $ map (("import " ++) . (++ "\n")) allImports
-    allImports = imports ++ ["Uwecode.UweObj", "Uwecode.IO", "Uwecode.BasicUweObjs", "Uwecode.Conversion"]
+    importsStr = makeImportStatements allImports
+    allImports = imports ++ (makeUnqualifiedImportTups $ map ("Uwecode." ++) ["UweObj", "IO", "BasicUweObjs", "Conversion"])
 
 figureOutGoodFileName :: String -> IO String
 figureOutGoodFileName s = do
@@ -69,7 +74,9 @@ printError str = hPutStr stderr (str++"\n")
 cliGivenArgs :: [String] -> IO ()
 cliGivenArgs ["run", f]   = checkForFail $ runUweFile f
 cliGivenArgs ["build", f] = checkForFail $ buildUweFile f
+cliGivenArgs ["make", f]  = checkForFail $ makeUweFile f
 cliGivenArgs ("run":_)    = printError "Command 'run' takes 1 argument"
 cliGivenArgs ("build":_)  = printError "Command 'build' takes 1 argument"
+cliGivenArgs ("make":_)   = printError "Command 'make' takes 1 argument"
 cliGivenArgs []           = printError "No command given"
 cliGivenArgs _            = printError "Unrecognized command"

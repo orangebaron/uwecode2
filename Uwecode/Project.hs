@@ -19,8 +19,11 @@ iosFileName = "ios"
 iosLocation :: FilePath -> FilePath
 iosLocation projLoc = projLoc </> iosFileName
 
-getProjectIOs :: FilePath -> IO ([String], [String], String)
-getProjectIOs proj = return (["Uwecode.StdIOs", "Control.Monad.Trans.Class"], ["printIO", "getThreadNumIO", "delayIO"], "(lift $ putStrLn \"thread done\\n\")") --TODO
+makeUnqualifiedImportTups :: [String] -> [(String, String)]
+makeUnqualifiedImportTups = map (\x -> (x, ""))
 
-optimizeObj :: FilePath -> UweObj -> IO ([String], String)
+getProjectIOs :: FilePath -> IO ([(String, String)], [String], String)
+getProjectIOs proj = return (makeUnqualifiedImportTups ["Uwecode.StdIOs", "Control.Monad.Trans.Class"], ["printIO", "getThreadNumIO", "delayIO"], "(lift $ putStrLn \"thread done\\n\")") --TODO
+
+optimizeObj :: FilePath -> UweObj -> IO ([(String, String)], String)
 optimizeObj proj obj = return ([], show obj)

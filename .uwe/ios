@@ -1,0 +1,1 @@
+([("Uwecode.StdIOs", ""), ("Control.Monad.Trans.Class", "")], ["printIO", "getThreadNumIO", "delayIO"], "(lift $ putStrLn \"thread done\\n\")")

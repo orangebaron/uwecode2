@@ -1,4 +1,4 @@
-module Uwecode.Project where
+module Uwecode.Project.Project where
 
 import Uwecode.UweObj
 import Uwecode.IO

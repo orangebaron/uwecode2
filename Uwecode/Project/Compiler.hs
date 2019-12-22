@@ -1,11 +1,11 @@
-module Uwecode.Compiler where
+module Uwecode.Project.Compiler where
 
 import Uwecode.UweObj
 import Uwecode.Conversion
 import Uwecode.CodeReader
 import Uwecode.IO
 import Uwecode.StdIOs
-import Uwecode.Project
+import Uwecode.Project.Project
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Maybe
 import System.IO

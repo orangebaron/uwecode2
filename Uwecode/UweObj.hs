@@ -29,3 +29,6 @@ data UweObjEncoding = UweObjEncoding String [Natural] [UweObj] deriving (Show, E
 
 decrementDepth :: Depth -> Depth
 decrementDepth = fmap $ subtract 1
+
+incrementDepth :: Depth -> Depth
+incrementDepth = fmap $ (+ 1)

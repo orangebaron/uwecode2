@@ -8,7 +8,6 @@ import System.IO
 import Data.IORef
 import GHC.Natural
 import qualified Data.Set as S
-import Control.Time
 
 type ThreadNum = Natural
 data ThreadState = ThreadState { threadNum :: ThreadNum, inpMsg :: UweObj, takenThreads :: IORef (S.Set Natural) }
@@ -23,7 +22,7 @@ runIO fs close (InputUweIO next) = do
     state <- get
     runMaybeIO fs close $ next $ inpMsg state
 
-runIO fs close (OutputUweIO n otp next) = case (drop (naturalToInt n) fs) of
+runIO fs close (OutputUweIO n otp next) = case (drop (fromEnum n) fs) of
     [] -> unsuccessful
     (x:_) -> do
         x otp
@@ -66,7 +65,7 @@ makeThreadState = do
 
 waitForAllThreadsFinish :: IORef (S.Set Natural) -> IO ()
 waitForAllThreadsFinish ref = do -- TODO: there's gotta be a better way to do this
-    delay (1e-2::Double)
+    threadDelay 1000
     val <- readIORef ref
     if (S.null val) then return () else waitForAllThreadsFinish ref
 

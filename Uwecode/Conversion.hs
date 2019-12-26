@@ -20,7 +20,7 @@ criteriaToConversion (firstCriteria:restCriteria) depth obj0 = tryToSimplify (he
     tryToSimplify nextHelper (Just criteria) obj = either nextHelper Right $ simplifyWithCriteriaGivenMaxDepth criteria depth obj
     helper n obj
         | n >= length restCriteria = Left obj0
-        | otherwise = tryToSimplify (helper $ n + 1) (restCriteria !! n) (called obj $ arbitraryVal $ intToNatural n)
+        | otherwise = tryToSimplify (helper $ n + 1) (restCriteria !! n) (called obj $ arbitraryVal $ toEnum $ fromEnum n)
 
 encodingCriteriaToCriteria :: EncodingCriteria a -> Criteria a
 encodingCriteriaToCriteria = (. asEncoding)

@@ -5,7 +5,7 @@ import Uwecode.BasicUweObjs
 import Uwecode.Conversion
 import Uwecode.IO
 import Control.Monad.State
-import Control.Time
+import Control.Concurrent
 
 getThreadNum :: UweIOMonad ThreadNum
 getThreadNum = do
@@ -26,4 +26,4 @@ getThreadNumIO = const $ do
     setInpMsg $ churchNum n
 
 delayIO :: UweObj -> UweIOMonad ()
-delayIO = maybe unsuccessful (lift . delay . (* (1e-6 :: Double)) . fromIntegral) . ignoringConversion objToNumber Nothing
+delayIO = maybe unsuccessful (lift . threadDelay . fromEnum) . ignoringConversion objToNumber Nothing

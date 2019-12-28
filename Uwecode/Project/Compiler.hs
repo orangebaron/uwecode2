@@ -14,7 +14,7 @@ import Data.List
 
 makeUweFileHelper :: [(String, String)] -> [String] -> String -> String -> FilePath -> IO FilePath
 makeUweFileHelper imports fs close obj = makeFile allImports mainText where
-    allImports = imports ++ (makeUnqualifiedImportTups $ map ("Uwecode." ++) ["UweObj", "IO", "BasicUweObjs", "Conversion"])
+    allImports = imports `union` (makeUnqualifiedImportTups $ map ("Uwecode." ++) ["UweObj", "IO", "BasicUweObjs", "Conversion"])
     mainText = "startRunAndCleanupProcess " ++ showStrList fs ++ " " ++ close ++ " $ objToIO infiniteDepth $ " ++ obj
 
 makeUweFile :: FilePath -> MaybeT IO FilePath

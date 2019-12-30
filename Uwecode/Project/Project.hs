@@ -5,9 +5,12 @@ import Uwecode.IO
 import Uwecode.StdIOs
 import Uwecode.Project.Util
 import Control.Monad.Trans.Class
+import Control.Monad.Trans.Maybe
 import System.IO
 import System.FilePath
 import Data.List
+import System.Process
+import qualified Data.Set
 
 projectFolderName :: FilePath
 projectFolderName = ".uwe"
@@ -37,5 +40,9 @@ makeOptimizeObjFile path depth imports opts obj = makeFile allImports mainText p
 
 optimizeObj :: FilePath -> UweObj -> IO ([(String, String)], String)
 optimizeObj proj obj = do
-    makeOptimizeObjFile "opt" infiniteDepth [] [] obj
-    return ([], show obj)
+    path <- makeOptimizeObjFile "opt" infiniteDepth [] [] obj
+    runMaybeT $ callGHC $ " " ++ path ++ ".hs"
+    otpStr <- readProcess ("./" ++ path) [] [] -- TODO verrrrry ugly
+    rmFile path
+    rmFile (path ++ ".hs")
+    let (str, set) = read otpStr in return (Data.Set.toList set, str)

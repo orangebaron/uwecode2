@@ -1,7 +1,11 @@
 module Uwecode.Project.ProjectIOs where
 
-import System.IO
+import Uwecode.UweObj
+import Uwecode.Conversion
+import Uwecode.IO
 import Uwecode.Project.Project
+import System.IO
+import Control.Monad.State
 
 readIosFile :: IO ([(String, String)], String)
 readIosFile = do
@@ -20,3 +24,10 @@ setIosCloser :: String -> IO ()
 setIosCloser closer = do
     (imps, _) <- readIosFile
     writeIosFile (imps, closer)
+
+addIosImportIO :: UweObj -> UweIOMonad ()
+addIosImportIO obj = maybe unsuccessful (lift . addIosImport) $ do
+    (leftObj, rightObj) <- ignoringConversion objToTuple Nothing obj
+    left <- ignoringConversion objToString Nothing leftObj
+    right <- ignoringConversion objToString Nothing rightObj
+    return (left, right)

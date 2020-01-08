@@ -47,7 +47,7 @@ cliGivenArgs :: [String] -> IO ()
 cliGivenArgs ["run", f]   = checkForFail $ runUweFile False f
 cliGivenArgs ["build", f] = checkForFail $ buildUweFile False f
 cliGivenArgs ["make", f]  = checkForFail $ makeUweFile False f
-cliGivenArgs ["proj"]     = checkForFail $ runUweFile True "main.uwe" -- TODO project in subfolders
+cliGivenArgs ["proj"]     = checkForFail $ runUweFile True "proj.uwe" -- TODO project in subfolders
 cliGivenArgs ("run":_)    = printError "Command 'run' takes 1 argument"
 cliGivenArgs ("build":_)  = printError "Command 'build' takes 1 argument"
 cliGivenArgs ("make":_)   = printError "Command 'make' takes 1 argument"

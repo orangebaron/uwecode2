@@ -62,3 +62,6 @@ addOptsImportIO obj = maybe unsuccessful (lift . addOptsImport) $ do
 
 addOptIO :: UweObj -> UweIOMonad ()
 addOptIO = maybe unsuccessful (lift . addOpt) .  ignoringConversion objToString Nothing
+
+projCloser :: UweIOMonad ()
+projCloser = lift $ print "done" -- TODO default values in file

@@ -13,7 +13,7 @@ readIosFile = do
     return $ if text == "" then ([], [], "") else read text
 
 writeIosFile :: ([(String, String)], [String], String) -> IO ()
-writeIosFile contents = writeFile (iosLocation $ projectLocation ".") $ show contents
+writeIosFile contents = writeFile (iosLocation $ projectLocation ".") $ show contents ++ "\n"
 
 addIosImport :: (String, String) -> IO ()
 addIosImport imp = do
@@ -49,7 +49,7 @@ readOptsFile = do
     return $ if text == "" then ([], []) else read text
 
 writeOptsFile :: ([(String, String)], [String]) -> IO ()
-writeOptsFile contents = writeFile (optsLocation $ projectLocation ".") $ show contents
+writeOptsFile contents = writeFile (optsLocation $ projectLocation ".") $ show contents ++ "\n"
 
 addOptsImport :: (String, String) -> IO ()
 addOptsImport imp = do

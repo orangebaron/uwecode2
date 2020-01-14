@@ -53,7 +53,7 @@ fixString ('\\':'x':a:b:c:s) = (maybe ("\\x"++(a:b:c:"")) id $ do
     n <- readMaybe $ a:b:c:"" :: Maybe Int
     chr <- SE.toEnum n :: Maybe Char
     return [chr] ) ++ (fixString s)
-fixString ('\\':c:s) = (Map.findWithDefault c c backslashReplacements) : s
+fixString ('\\':c:s) = (Map.findWithDefault c c backslashReplacements) : fixString s
 fixString (c:s) = c:(fixString s)
 fixString "" = ""
 

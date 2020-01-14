@@ -20,7 +20,7 @@ makeUweFileHelper imports fs close obj = makeFile allImports mainText where
 makeUweFile :: Bool -> FilePath -> MaybeT IO FilePath
 makeUweFile isProject path = do
     (projImports, fs, close) <- if isProject then
-        return ([("Uwecode.Project.ProjectIOs", "")], ["addIosImportIO", "setIosCloserIO", "addOptsImportIO", "addOptIO"], "projCloser")
+        return ([("Uwecode.Project.ProjectIOs", "")], ["addIosImportIO", "addIoIO", "setIosCloserIO", "addOptsImportIO", "addOptIO"], "projCloser")
         else lift $ getProjectIOs $ projectLocation path
     mainObj <- getMainObjFromFile path
     (objImports, objString) <- lift $ optimizeObj (projectLocation path) mainObj

@@ -7,23 +7,28 @@ import Uwecode.Project.Project
 import System.IO
 import Control.Monad.State
 
-readIosFile :: IO ([(String, String)], String)
+readIosFile :: IO ([(String, String)], [String], String)
 readIosFile = do
     text <- readFile $ iosLocation "."
-    return $ if text == "" then ([], "") else read text
+    return $ if text == "" then ([], [], "") else read text
 
-writeIosFile :: ([(String, String)], String) -> IO ()
+writeIosFile :: ([(String, String)], [String], String) -> IO ()
 writeIosFile contents = writeFile (iosLocation ".") $ show contents
 
 addIosImport :: (String, String) -> IO ()
 addIosImport imp = do
-    (imps, closer) <- readIosFile
-    writeIosFile (imp : imps, closer)
+    (imps, ios, closer) <- readIosFile
+    writeIosFile (imp : imps, ios, closer)
+
+addIo :: String -> IO ()
+addIo io = do
+    (imps, ios, closer) <- readIosFile
+    writeIosFile (imps, io : ios, closer)
 
 setIosCloser :: String -> IO ()
 setIosCloser closer = do
-    (imps, _) <- readIosFile
-    writeIosFile (imps, closer)
+    (imps, ios, _) <- readIosFile
+    writeIosFile (imps, ios, closer)
 
 addIosImportIO :: UweObj -> UweIOMonad ()
 addIosImportIO obj = maybe unsuccessful (lift . addIosImport) $ do
@@ -31,6 +36,9 @@ addIosImportIO obj = maybe unsuccessful (lift . addIosImport) $ do
     left <- ignoringConversion objToString Nothing leftObj
     right <- ignoringConversion objToString Nothing rightObj
     return (left, right)
+
+addIoIO :: UweObj -> UweIOMonad ()
+addIoIO = maybe unsuccessful (lift . addIo) . ignoringConversion objToString Nothing
 
 setIosCloserIO :: UweObj -> UweIOMonad ()
 setIosCloserIO = maybe unsuccessful (lift . setIosCloser) . ignoringConversion objToString Nothing

@@ -9,11 +9,11 @@ import Control.Monad.State
 
 readIosFile :: IO ([(String, String)], [String], String)
 readIosFile = do
-    text <- readFile $ iosLocation "."
+    text <- readFile $ iosLocation $ projectLocation "."
     return $ if text == "" then ([], [], "") else read text
 
 writeIosFile :: ([(String, String)], [String], String) -> IO ()
-writeIosFile contents = writeFile (iosLocation ".") $ show contents
+writeIosFile contents = writeFile (iosLocation $ projectLocation ".") $ show contents
 
 addIosImport :: (String, String) -> IO ()
 addIosImport imp = do
@@ -45,11 +45,11 @@ setIosCloserIO = maybe unsuccessful (lift . setIosCloser) . ignoringConversion o
 
 readOptsFile :: IO ([(String, String)], [String])
 readOptsFile = do
-    text <- readFile $ optsLocation "."
+    text <- readFile $ optsLocation $ projectLocation "."
     return $ if text == "" then ([], []) else read text
 
 writeOptsFile :: ([(String, String)], [String]) -> IO ()
-writeOptsFile contents = writeFile (optsLocation ".") $ show contents
+writeOptsFile contents = writeFile (optsLocation $ projectLocation ".") $ show contents
 
 addOptsImport :: (String, String) -> IO ()
 addOptsImport imp = do

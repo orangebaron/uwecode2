@@ -6,11 +6,17 @@ import Uwecode.IO
 import Uwecode.Project.Project
 import System.IO
 import Control.Monad.State
+import Control.Exception
+
+defltIos = ([], [], "")
+defltOpts = ([], [])
+tryRead :: IO String -> IO (Either IOError String)
+tryRead = try
 
 readIosFile :: IO ([(String, String)], [String], String)
 readIosFile = do
-    text <- readFile $ iosLocation $ projectLocation "."
-    return $ if text == "" then ([], [], "") else read text
+    eitherText <- tryRead $ readFile $ iosLocation $ projectLocation "."
+    return $ let text = either (const "") id eitherText in (if text == "" then defltIos else read text)
 
 writeIosFile :: ([(String, String)], [String], String) -> IO ()
 writeIosFile contents = writeFile (iosLocation $ projectLocation ".") $ show contents ++ "\n"
@@ -45,8 +51,8 @@ setIosCloserIO = maybe unsuccessful (lift . setIosCloser) . ignoringConversion o
 
 readOptsFile :: IO ([(String, String)], [String])
 readOptsFile = do
-    text <- readFile $ optsLocation $ projectLocation "."
-    return $ if text == "" then ([], []) else read text
+    eitherText <- tryRead $ readFile $ optsLocation $ projectLocation "."
+    return $ let text = either (const "") id eitherText in (if text == "" then defltOpts else read text)
 
 writeOptsFile :: ([(String, String)], [String]) -> IO ()
 writeOptsFile contents = writeFile (optsLocation $ projectLocation ".") $ show contents ++ "\n"
@@ -72,4 +78,8 @@ addOptIO :: UweObj -> UweIOMonad ()
 addOptIO = maybe unsuccessful (lift . addOpt) .  ignoringConversion objToString Nothing
 
 projCloser :: UweIOMonad ()
-projCloser = lift $ print "done" -- TODO default values in file
+projCloser = lift $ do
+    ios <- readIosFile
+    if ios == defltIos then writeIosFile defltIos else return ()
+    opts <- readOptsFile
+    if opts == defltOpts then writeOptsFile defltOpts else return ()

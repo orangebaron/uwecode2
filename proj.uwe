@@ -5,11 +5,12 @@ addOptsImport = addImport 3
 addIO = io -> otp 1 io
 setIosCloser = closer -> otp 2 closer
 addOpt = opt -> otp 4 opt
-main = addIosImport "Uwecode.StdIOs" ""
+main =
 (addIosImport "Control.Monad.Trans.Class" ""
-(addIO "printIO"
-(addIO "getThreadNumIO"
+(addIosImport "Uwecode.StdIOs" ""
 (addIO "delayIO"
+(addIO "getThreadNumIO"
+(addIO "printIO"
 (setIosCloser "(lift $ putStrLn \"thread done\\n\")"
 (stop
-))))))
+)))))))

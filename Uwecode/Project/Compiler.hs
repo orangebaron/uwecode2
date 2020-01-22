@@ -23,7 +23,7 @@ makeUweFile isProject path = do
         return ([("Uwecode.Project.ProjectIOs", "")], ["addIosImportIO", "addIoIO", "setIosCloserIO", "addOptsImportIO", "addOptIO"], "projCloser")
         else lift $ getProjectIOs $ projectLocation path
     mainObj <- getMainObjFromFile path
-    (objImports, objString) <- lift $ optimizeObj (projectLocation path) mainObj
+    (objImports, objString) <- lift $ if isProject then return ([], show mainObj) else optimizeObj (projectLocation path) mainObj
     lift $ makeUweFileHelper (union projImports objImports) fs close objString path
 
 buildUweFile :: Bool -> FilePath -> MaybeT IO FilePath

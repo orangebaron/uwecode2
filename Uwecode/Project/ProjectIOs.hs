@@ -7,6 +7,7 @@ import Uwecode.Project.Project
 import System.IO
 import Control.Monad.State
 import Control.Exception
+import System.Directory
 
 defltIos = ([], [], "")
 defltOpts = ([], [])
@@ -15,6 +16,7 @@ tryRead = try
 
 readIosFile :: IO ([(String, String)], [String], String)
 readIosFile = do
+    createDirectoryIfMissing False $ projectLocation "."
     eitherText <- tryRead $ readFile $ iosLocation $ projectLocation "."
     return $ let text = either (const "") id eitherText in (if text == "" then defltIos else read text)
 
@@ -51,6 +53,7 @@ setIosCloserIO = maybe unsuccessful (lift . setIosCloser) . ignoringConversion o
 
 readOptsFile :: IO ([(String, String)], [String])
 readOptsFile = do
+    createDirectoryIfMissing False $ projectLocation "."
     eitherText <- tryRead $ readFile $ optsLocation $ projectLocation "."
     return $ let text = either (const "") id eitherText in (if text == "" then defltOpts else read text)
 

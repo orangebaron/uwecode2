@@ -41,3 +41,10 @@ enclosedParser endingChar = do
     else do
         s2 <- enclosedParser endingChar
         return (c:s2)
+
+spaceWithComments :: Parser String
+spaceWithComments = (do
+    space
+    specificChar '['
+    enclosedParser ']'
+    spaceWithComments) <|> space

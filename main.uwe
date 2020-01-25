@@ -1,4 +1,4 @@
-{main2}
+{std}
 sketchyNumToStr = n -> n (x -> "1") "0"
 print = msg -> next -> otp 0 msg next
 getThreadNum = next -> otp 1 0 (inp next)

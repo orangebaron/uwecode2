@@ -3,6 +3,8 @@ module Uwecode.Parser.Grouping where
 import Uwecode.Parser.Parser
 import Uwecode.Parser.CharsAndStrings
 import Data.Map
+import Numeric.Natural
+import Control.Applicative
 
 data QuotedState   = QuotedState { isStr :: Bool, isBackticked :: Bool }
 
@@ -42,9 +44,30 @@ enclosedParser endingChar = do
         s2 <- enclosedParser endingChar
         return (c:s2)
 
+comment :: Parser String
+comment = specificChar '[' >> enclosedParser ']'
+
 spaceWithComments :: Parser String
-spaceWithComments = (do
-    space
-    specificChar '['
-    enclosedParser ']'
-    spaceWithComments) <|> space
+spaceWithComments = listed (space >> comment) >> space
+
+afterToken :: Parser String
+afterToken = spaceWithComments <|> wantEmpty ""
+
+token :: Parser a -> Parser a
+token p = do
+    a <- p
+    afterToken
+    return a
+
+stringToken :: String -> Parser String
+stringToken = token . specificString
+
+word :: Parser String
+word = token $ oneOrMoreIn wordChars
+
+number :: Parser Natural
+number = token $ do
+    numStr <- oneOrMoreIn numChars
+    return $ read numStr
+
+backtickPrefacedWord = specificChar backtick >> word

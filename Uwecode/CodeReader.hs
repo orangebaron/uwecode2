@@ -6,6 +6,7 @@ import Uwecode.IO
 import Uwecode.Conversion
 import Uwecode.Parser.Parser
 import Uwecode.Parser.DeclarationParsers
+import Uwecode.Parser.Grouping
 import Control.Monad
 import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.Class
@@ -45,7 +46,7 @@ readCodeAST file map (a:b) = do
     readCodeAST file newMap b
 
 code :: Parser CodeAST
-code = listed declaration
+code = optionally space >> listed (comment >> space) >> listed declaration
 
 varMap :: FileContext -> Parser (MaybeT IO GlobalVarMap)
 varMap context = do

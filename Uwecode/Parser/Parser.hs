@@ -104,25 +104,3 @@ wantEmpty :: a -> Parser a
 wantEmpty a = Parser (\s -> case s of
     "" -> [(a, "")]
     _  -> [])
-
-afterToken :: Parser String
-afterToken = space <|> wantEmpty ""
-
-token :: Parser a -> Parser a
-token p = do
-    a <- p
-    afterToken
-    return a
-
-stringToken :: String -> Parser String
-stringToken = token . specificString
-
-word :: Parser String
-word = token $ oneOrMoreIn wordChars
-
-number :: Parser Natural
-number = token $ do
-    numStr <- oneOrMoreIn numChars
-    return $ read numStr
-
-backtickPrefacedWord = specificChar backtick >> word

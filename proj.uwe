@@ -1,16 +1,17 @@
-{main2}
-addImport = n -> imp -> as -> otp n (tup imp as)
+{std}
+addImport = n -> imp -> as -> otp n (,T imp as)
 addIosImport = addImport 0
 addOptsImport = addImport 3
-addIO = io -> otp 1 io
-setIosCloser = closer -> otp 2 closer
-addOpt = opt -> otp 4 opt
+addIO = otp 1
+setIosCloser = otp 2
+addOpt = otp 4
 main =
-addIosImport "Control.Monad.Trans.Class" "" (
-addIosImport "Uwecode.StdIOs" "" (
-addIO "delayIO" (
-addIO "getThreadNumIO" (
-addIO "printIO" (
-setIosCloser "(lift $ putStrLn \"thread done\\n\")" (
+addIosImport "Control.Monad.Trans.Class" "" `id
+addIosImport "Uwecode.StdIOs" "" `id
+addIO "delayIO" `id
+addIO "getThreadNumIO" `id
+addIO "printIO" `id
+setIosCloser "(lift $ putStrLn \"thread done\\n\")" `id
+addOptsImport "Uwecode.StdOpts" "" `id
+addOpt "stdOpts" `id
 stop
-))))))

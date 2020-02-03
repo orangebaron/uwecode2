@@ -1,13 +1,13 @@
 [basic functions]
 id = 1
-then = a -> b -> c -> b `id a c d
+then = a -> b -> c -> b `id a c
 combineThen = a -> b -> c -> d -> b `id a c d
 const = a -> b -> a
 rev = a -> b -> b a
 in = rev
 revRev = a -> b -> rev a `then rev b
 selfCall = a -> a a
-recursive = a -> selfCall b -> a `id b b
+recursive = a -> selfCall (b -> a `id b b)
 [bool]
 true = const
 false = 0
@@ -45,17 +45,15 @@ shiftIncrTup _= tailTup `then a -> a `,T ++Num a
 =Num = a -> b -> <=Num a b `and <=Num b a
 >=Num = a -> b -> =Num a b `or >Num a b
 <Num = >=Num `combineThen not
-/Num = a -> b -> rev 0 `id recursive self -> b -> (*Num b n `>Num a) (--Num n) `id self `id ++Num n
-%Num = a -> b -> a `-Num b `*Num a `/Num b
 [list]
 ,L = ,T `combineThen just
 headList = callMaybe headTup
 tailList = callMaybe tailTup `then revRev id 0
-Maybe->List = callMaybe a -> a `,T 0
+Maybe->List = callMaybe (a -> a `,T 0)
 @List = a -> b -> headList `id b tailList a
 [...]
 [IO]
 inp = left `then left
-otp = ,T `combineThen right `then left
+otp = ,T `combineThen ,T `combineThen right `then left
 fork = ,T `combineThen just `then right
 stop = right false

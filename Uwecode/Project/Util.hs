@@ -53,5 +53,8 @@ callGHC args = do
 rmFile :: FilePath -> IO ()
 rmFile path = (system $ "rm " ++ path) >> return ()
 
+rmFolder :: FilePath -> IO ()
+rmFolder path = (system $ "rm -r " ++ path) >> return ()
+
 runFile :: FilePath -> IO ()
 runFile path = (system $ "./" ++ path) >> return ()

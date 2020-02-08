@@ -53,7 +53,7 @@ makeOptimizeObjFile path depth imports opts obj = makeFile allImports mainText p
 optimizeObj :: FilePath -> UweObj -> IO ([(String, String)], String)
 optimizeObj proj obj = do
     (imports, opts) <- getProjectOpts proj
-    path <- makeOptimizeObjFile "opt" infiniteDepth imports opts obj
+    path <- makeOptimizeObjFile "opt" (Just 10) imports opts obj -- TODO make the depth user specified or something
     runMaybeT $ callGHC $ " " ++ path ++ ".hs"
     otpStr <- readProcess ("./" ++ path) [] [] -- TODO verrrrry ugly
     rmFile path

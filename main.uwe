@@ -1,0 +1,7 @@
+{std}
+sketchyNumToStr = n -> n (x -> "1") "0"
+print = msg -> next -> otp 0 msg next
+getThreadNum = next -> otp 1 0 (inp next)
+delay = n -> next -> otp 2 n next
+printThreadNum = next -> getThreadNum (f -> print (sketchyNumToStr f) next)
+main = fork (printThreadNum (print "hello world" stop)) (printThreadNum (delay 880654 (printThreadNum stop)))

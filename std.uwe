@@ -1,59 +1,42 @@
-[basic functions]
+[BASICS]
 id = 1
-then = a -> b -> c -> b `id a c
-combineThen = a -> b -> c -> d -> b `id a c d
 const = a -> b -> a
-rev = a -> b -> b a
-in = rev
-revRev = a -> b -> rev a `then rev b
 selfCall = a -> a a
-recursive = a -> selfCall `id b -> a `id b b
-[bool]
-true = const
-false = 0
-and = a -> b -> a b a
-or = a -> b -> a a b
-not = revRev false true
-nand = and `combineThen not
-nor = or `combineThen not
-xor = a -> b -> or a b `and nand a b
-xnor = xor `combineThen not
-[either]
-left = a -> b -> const `id b a
-right = a -> b -> c -> c a
-callEither = a -> b -> b a a
-[maybe]
+recursive = a -> selfCall `id (b -> a `id b b)
+rev = a -> b -> b a
+comp = a -> b -> c -> a `id b c
+ignore = 0
+[n(Function) 1 ought to be the same as function]
+nRev = n -> n (next -> x -> rev x `comp next) id
+nComp = (nRev 2) (next -> f -> g -> x -> next f (g x)) id
+[TODO nIgnore]
+[TODO different kind of nComp where it's f -> g -> a1 -> a2 -> ... -> an -> f (g a1 a2 ... an), and probably get rid of current nComp]
+[EITHER]
+left = x -> f -> g -> f x
+right = x -> f -> g -> g x
+bindEither = nRev 2 left
+[MAYBE]
 just = left
-none = false
-callMaybe = a -> revRev (a `then just) none [heres my number so call me maybe]
-bindMaybe = a -> revRev a none
-[tup]
-,T = revRev
-headTup = rev true
-tailTup = rev false
-[num]
-++Num = a -> b -> b `then a b
-+Num = rev ++Num
-*Num = a -> +Num a `revRev 0
-^Num = rev
-shiftIncrTup _= tailTup `then a -> a `,T ++Num a
---Num = revRev shiftIncrTup (0 `,T 0) `then headTup
--Num = revRev --Num
-=0 _= const false `revRev true
-<=Num = -Num `combineThen =0
->Num = <=Num `combineThen not
-=Num = a -> b -> <=Num a b `and <=Num b a
->=Num = a -> b -> =Num a b `or >Num a b
-<Num = >=Num `combineThen not
-[list]
-,L = ,T `combineThen just
-headList = callMaybe headTup
-tailList = callMaybe tailTup `then revRev id 0
-Maybe->List = callMaybe `id a -> a `,T 0
-@List = a -> b -> headList `id b tailList a
-[...]
-[IO]
-inp = left `then left
-otp = ,T `combineThen ,T `combineThen right `then left
-fork = ,T `combineThen just `then right
-stop = right false
+none = ignore
+bindMaybe = a -> nRev 2 a none
+[BOOL]
+true = const
+false = none
+notBool = nRev 2 false true
+andBool = bindMaybe
+orBool = nRev 2 true
+[TODO more bool stuff]
+[NAT]
+incNat = n -> f -> n f `comp f
+addNat = rev incNat
+[TODO maybe more nat stuff]
+[TUP]
+tup = nRev 2
+fstTup = rev const
+sndTup = rev ignore
+[LIST]
+consList = head -> rest -> f -> const `id f head rest
+emptyList = ignore
+reduceList = nRev 2
+mapList = f -> reduceList (consList `comp f) emptyList
+reduceList = f -> reduceList (head -> f head (consList head) id) emptyList

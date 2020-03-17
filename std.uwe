@@ -18,12 +18,12 @@ bindEither = nRev 2 left
 [MAYBE]
 just = left
 none = ignore
-bindMaybe = a -> nRev 2 a none
+bindMaybe = rev none `comp nRev 2
 [BOOL]
 true = const
-false = none
+false = ignore
 notBool = nRev 2 false true
-andBool = bindMaybe
+andBool = rev false `comp nRev 2
 orBool = nRev 2 true
 [TODO more bool stuff]
 [NAT]
@@ -37,6 +37,7 @@ sndTup = rev ignore
 [LIST]
 consList = head -> rest -> f -> const `id f head rest
 emptyList = ignore
-reduceList = nRev 2
-mapList = f -> reduceList (consList `comp f) emptyList
-reduceList = f -> reduceList (head -> f head (consList head) id) emptyList
+mapList = f -> nRev 2 (consList `comp f) emptyList
+filterList = f -> nRev 2 (head -> f head (consList head) id) emptyList
+concatList = rev consList
+bindList = a -> b -> mapList b a concatList emptyList

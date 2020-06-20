@@ -47,7 +47,7 @@ findGHC = ioMaybeToMaybeTIO $ findExecutable "ghc"
 callGHC :: String -> MaybeT IO ()
 callGHC args = do
     ghc <- findGHC
-    lift $ system $ ghc ++ args -- TODO look at exit code
+    lift $ system $ "\"" ++ ghc ++ "\"" ++ args -- TODO look at exit code
     return ()
 
 rmFile :: FilePath -> IO ()
@@ -57,4 +57,4 @@ rmFolder :: FilePath -> IO ()
 rmFolder path = (system $ "rm -r " ++ path) >> return ()
 
 runFile :: FilePath -> IO ()
-runFile path = (system $ "./" ++ path) >> return ()
+runFile path = (system $ "\"./" ++ path ++ "\"") >> return ()

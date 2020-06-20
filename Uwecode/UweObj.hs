@@ -10,17 +10,22 @@ infiniteDepth :: Depth
 infiniteDepth = Nothing
 
 data UweObj = UweObj {
-    simplify        :: Depth -> UweObj,
-    call            :: UweObj -> UweObj,
-    replace         :: UweVar -> UweObj -> UweObj,
-    allVars         :: Set.Set UweVar,
-    unboundVars     :: Set.Set UweVar -> Set.Set UweVar,
-    replaceBindings :: Set.Set UweVar -> UweObj,
-    asEncoding      :: UweObjEncoding,
-    asHsCode        :: String }
+    call             :: UweObj -> UweObj,
+    replace          :: UweVar -> UweObj -> UweObj,
+    allVars          :: Set.Set UweVar,
+    unboundVars      :: Set.Set UweVar -> Set.Set UweVar,
+    replaceBindings  :: Set.Set UweVar -> UweObj,
+    asEncoding       :: UweObjEncoding,
+    asHsCode         :: String,
+    toDeBruijn       :: [UweVar] -> UweObj,
+    simplifyDeBruijn :: Depth -> [UweObj] -> UweObj,
+    incDeBruijn      :: UweObj }
+
+simplify :: UweObj -> Depth -> UweObj
+simplify obj depth = simplifyDeBruijn obj depth []
 
 instance Eq UweObj where
-    a == b = asEncoding a == asEncoding b
+    a == b = (asEncoding $ toDeBruijn a []) == (asEncoding $ toDeBruijn b [])
 
 instance Show UweObj where
     show = asHsCode

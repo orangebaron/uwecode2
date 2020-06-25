@@ -17,12 +17,13 @@ data UweObj = UweObj {
     replaceBindings  :: Set.Set UweVar -> UweObj,
     asEncoding       :: UweObjEncoding,
     asHsCode         :: String,
+    replaceDeBruijn  :: UweVar -> UweObj -> UweObj,
     toDeBruijn       :: [UweVar] -> UweObj,
     simplifyDeBruijn :: Depth -> [UweObj] -> UweObj,
-    incDeBruijn      :: UweObj }
+    incDeBruijn      :: UweVar -> UweObj }
 
 simplify :: UweObj -> Depth -> UweObj
-simplify obj depth = simplifyDeBruijn obj depth []
+simplify obj depth = simplifyDeBruijn (toDeBruijn obj []) depth []
 
 instance Eq UweObj where
     a == b = (asEncoding $ toDeBruijn a []) == (asEncoding $ toDeBruijn b [])

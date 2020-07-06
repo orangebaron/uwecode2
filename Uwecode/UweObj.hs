@@ -20,10 +20,14 @@ data UweObj = UweObj {
     replaceDeBruijn  :: UweVar -> UweObj -> UweObj,
     toDeBruijn       :: [UweVar] -> UweObj,
     simplifyDeBruijn :: Depth -> [UweObj] -> UweObj,
-    incDeBruijn      :: UweVar -> UweObj }
+    incDeBruijn      :: UweVar -> UweObj,
+    asCombinators    :: (Natural, UweObj) } -- convert to de bruijn first before doing this
 
 simplify :: UweObj -> Depth -> UweObj
-simplify obj depth = simplifyDeBruijn (toDeBruijn obj []) depth []
+simplify obj depth = simplifyDeBruijn (toCombinators obj) depth []
+
+toCombinators :: UweObj -> UweObj
+toCombinators obj = snd $ asCombinators $ toDeBruijn obj []
 
 instance Eq UweObj where
     a == b = (asEncoding $ toDeBruijn a []) == (asEncoding $ toDeBruijn b [])

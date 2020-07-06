@@ -191,57 +191,68 @@ makeBoolObj a = abs $ abs $ ret (if a then 1 else 0) where
     abs = deBruijnFunction
     ret = deBruijnReturnVal
 
-tupleChar :: Char -> UweObj
-tupleChar chr = me where
+reallySimpleObj :: UweObjEncoding -> String -> (UweObj -> UweObj) -> UweObj
+reallySimpleObj _asEncoding _asHsCode _call = me where
     me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn
     _simplify = const $ const me
-    _call = call meObj
     _replace = const $ const me
     _allVars = Set.empty
     _unboundVars = const Set.empty
     _replaceBindings = const me
-    _asEncoding = UweObjEncoding ("tupleChar: "++[chr]) [] []
-    _asHsCode = "tupleChar " ++ show chr
     _replaceDeBruijn = const $ const me
     _toDeBruijn = const me
     _simplifyDeBruijn = const $ const me
     _incDeBruijn = const me
-    
-    meObj :: UweObj
-    meObj = makeListObj $ map (makeBoolObj . (== 1) . (`mod` 2) . (fromEnum chr `div`) . (2 ^)) [0..7]
+
+tupleChar :: Char -> UweObj
+tupleChar chr = reallySimpleObj (UweObjEncoding ("tupleChar: "++[chr]) [] []) ("tupleChar " ++ show chr) (call $ makeListObj $ map (makeBoolObj . (== 1) . (`mod` 2) . (fromEnum chr `div`) . (2 ^)) [0..7])
 
 tupleCharStr :: String -> UweObj
 tupleCharStr "" = emptyListObj
-tupleCharStr str@(chr:rest) = me where
-    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn
-    _simplify = const $ const me
-    _call = call meObj
-    _replace = const $ const me
-    _allVars = Set.empty
-    _unboundVars = const Set.empty
-    _replaceBindings = const me
-    _asEncoding = UweObjEncoding ("tupleCharStr: "++str) [] []
-    _asHsCode = "tupleCharStr " ++ show str
-    _replaceDeBruijn = const $ const me
-    _toDeBruijn = const me
-    _simplifyDeBruijn = const $ const me
-    _incDeBruijn = const me
-    
-    meObj :: UweObj
-    meObj = consListObj (tupleChar chr) (tupleCharStr rest)
+tupleCharStr str@(chr:rest) = reallySimpleObj (UweObjEncoding ("tupleCharStr: "++str) [] []) ("tupleCharStr " ++ show str) (call $ consListObj (tupleChar chr) (tupleCharStr rest))
 
 arbitraryVal :: Natural -> UweObj
-arbitraryVal n = me where
-    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn
-    _simplify = const $ const me
-    _call = called me
-    _replace = const $ const me
-    _allVars = Set.empty
-    _unboundVars = const Set.empty
-    _replaceBindings = const me
-    _asEncoding = UweObjEncoding "arbitraryVal" [n] []
-    _asHsCode = "arbitraryVal " ++ show n
-    _replaceDeBruijn = const $ const me
-    _toDeBruijn = const me
-    _simplifyDeBruijn = const $ const me
-    _incDeBruijn = const me
+arbitraryVal n = reallySimpleObj (UweObjEncoding "arbitraryVal" [n] []) ("arbitraryVal " ++ show n) (called $ arbitraryVal n)
+
+combI :: UweObj
+combI = reallySimpleObj (UweObjEncoding "combI" [] []) "combI" id
+
+combK :: UweObj
+combK = reallySimpleObj (UweObjEncoding "combK" [] []) "combK" calledCombK
+
+calledCombK :: UweObj -> UweObj
+calledCombK x = reallySimpleObj (UweObjEncoding "calledCombK" [] [x]) ("calledCombK (" ++ show x ++ ")") (const x)
+
+nCombinator :: Char -> (UweObj -> [UweObj] -> UweObj) -> (Natural -> UweObj, Natural -> [UweObj] -> UweObj)
+nCombinator c f = (combN, calledCombN) where
+    name1 = "comb" ++ [c] ++ "n"
+    name2 = "calledComb" ++ [c] ++ "n"
+
+    combN :: Natural -> UweObj
+    combN n = reallySimpleObj (UweObjEncoding name1 [n] []) (name1 ++ " " ++ show n) (callCombN n [])
+
+    calledCombN :: Natural -> [UweObj] -> UweObj
+    calledCombN n l = reallySimpleObj (UweObjEncoding name2 [n] l) (name2 ++ " " ++ show n ++ " " ++ show l) (callCombN n l)
+
+    callCombN :: Natural -> [UweObj] -> UweObj -> UweObj
+    callCombN n l x
+        | (fromIntegral $ length l) == n + 2 = f x l
+        | otherwise = calledCombN n (l ++ [x]) -- TODO O(n)
+
+_combsBn :: (Natural -> UweObj, Natural -> [UweObj] -> UweObj)
+_combsBn = nCombinator 'B' (foldr call)
+
+combBn = fst _combsBn
+calledCombBn = snd _combsBn
+
+_combsCn :: (Natural -> UweObj, Natural -> [UweObj] -> UweObj)
+_combsCn = nCombinator 'C' (\x (f:(g:r)) -> call (call f $ foldr call x r) g)
+
+combCn = fst _combsCn
+calledCombCn = snd _combsCn
+
+_combsSn :: (Natural -> UweObj, Natural -> [UweObj] -> UweObj)
+_combsSn = nCombinator 'S' (\x (f:(g:r)) -> call (call f $ foldr call x r) (call g $ foldr call x r))
+
+combSn = fst _combsSn
+calledCombSn = snd _combsSn

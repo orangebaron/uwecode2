@@ -21,13 +21,15 @@ data UweObj = UweObj {
     toDeBruijn       :: [UweVar] -> UweObj,
     simplifyDeBruijn :: Depth -> [UweObj] -> UweObj,
     incDeBruijn      :: UweVar -> UweObj,
-    asCombinators    :: (Natural, UweObj) } -- convert to de bruijn first before doing this
+    asCombinators    :: (Natural, UweObj), -- have to convert to de bruijn first before doing this
+    asUnMemoizedComb :: UweObj } -- this is getting way too complicated...
+                                 -- sorry @ anyone whos reading this :)
 
 simplify :: UweObj -> Depth -> UweObj
 simplify obj depth = simplifyDeBruijn (toCombinators obj) depth []
 
 toCombinators :: UweObj -> UweObj
-toCombinators obj = snd $ asCombinators $ toDeBruijn obj []
+toCombinators obj = asUnMemoizedComb $ snd $ asCombinators $ toDeBruijn obj []
 
 instance Eq UweObj where
     a == b = (asEncoding $ toDeBruijn a []) == (asEncoding $ toDeBruijn b [])

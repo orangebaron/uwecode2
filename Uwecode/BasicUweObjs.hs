@@ -17,7 +17,7 @@ _benLynnCombF (a, x) (b, y) = case (a, b) of
 
 returnVal :: UweVar -> UweObj
 returnVal n = me where
-    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn _asCombinators
+    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn _asCombinators _asUnMemoizedComb
     _call = called me
     _replace m obj2
         | m == n = obj2
@@ -34,10 +34,11 @@ returnVal n = me where
     _simplifyDeBruijn = const $ const me
     _incDeBruijn = const me
     _asCombinators = (0, me)
+    _asUnMemoizedComb = me
 
 deBruijnReturnVal :: UweVar -> UweObj
 deBruijnReturnVal n = me where
-    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn _asCombinators
+    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn _asCombinators _asUnMemoizedComb
     _call = called me
     _replace = const $ const me
     _allVars = Set.empty
@@ -57,10 +58,11 @@ deBruijnReturnVal n = me where
     _asCombinators
         | n == 0 = (1, combI)
         | otherwise = (m + 1, _benLynnCombF (0, combK) x) where x@(m, _) = asCombinators $ deBruijnReturnVal $ n - 1
+    _asUnMemoizedComb = me
 
 function :: UweVar -> UweObj -> UweObj
 function n x = me where
-    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn _asCombinators
+    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn _asCombinators _asUnMemoizedComb
     _call obj2
         | n `Set.member` vs = call (_replaceBindings vs) obj2
         | otherwise = replace (replaceBindings x vs) n obj2
@@ -83,6 +85,7 @@ function n x = me where
     _simplifyDeBruijn = const $ const me
     _incDeBruijn = const me
     _asCombinators = (0, me)
+    _asUnMemoizedComb = me
     
     smallestValueNotInHelper :: UweVar -> Set.Set UweVar -> UweVar
     smallestValueNotInHelper num set
@@ -93,7 +96,7 @@ function n x = me where
 
 deBruijnFunction :: UweObj -> UweObj
 deBruijnFunction x = me where
-    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn _asCombinators
+    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn _asCombinators _asUnMemoizedComb
     _call obj2 = replaceDeBruijn x 0 obj2
     _replace = const $ const me
     _allVars = Set.empty
@@ -110,10 +113,11 @@ deBruijnFunction x = me where
         v = case n of
             0 -> (0, called combK e)
             _ -> (n - 1, e)
+    _asUnMemoizedComb = me
 
 called :: UweObj -> UweObj -> UweObj
 called a b = me where
-    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn _asCombinators
+    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn _asCombinators _asUnMemoizedComb
     _call = called me
     _replace m obj2 = called (replace a m obj2) (replace b m obj2)
     _allVars = allVars a `Set.union` allVars b
@@ -145,10 +149,11 @@ called a b = me where
     _asCombinators = (max m n, _benLynnCombF x y) where
         x@(m, _) = asCombinators a
         y@(n, _) = asCombinators b
+    _asUnMemoizedComb = called (asUnMemoizedComb a) (asUnMemoizedComb b)
 
 churchNum :: Natural -> UweObj
 churchNum n = me where
-    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn _asCombinators
+    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn _asCombinators _asUnMemoizedComb
     _simplify = const $ const me
     _call = calledChurchNum n
     _replace = const $ const me
@@ -162,11 +167,12 @@ churchNum n = me where
     _simplifyDeBruijn = const $ const me
     _incDeBruijn = const me
     _asCombinators = (0, me)
+    _asUnMemoizedComb = me
 
 calledChurchNum :: Natural -> UweObj -> UweObj
 calledChurchNum 0 _ = function 0 $ returnVal 0
 calledChurchNum n x = me where
-    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn _asCombinators
+    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn _asCombinators _asUnMemoizedComb
     _simplify = const $ const me
     _call = (call x) . (called $ calledChurchNum (n-1) x)
     _replace m obj2 = calledChurchNum n $ replace x m obj2
@@ -179,7 +185,8 @@ calledChurchNum n x = me where
     _toDeBruijn env = calledChurchNum n $ toDeBruijn x env
     _simplifyDeBruijn = const $ const me
     _incDeBruijn = calledChurchNum n . incDeBruijn x
-    _asCombinators = (0, me) -- bit sketch, but should never be a problem
+    _asCombinators = (m, calledChurchNum n y) where (m, y) = asCombinators x
+    _asUnMemoizedComb = calledChurchNum n $ asUnMemoizedComb x
 
 makeChurchTupObj :: UweObj -> UweObj -> UweObj
 makeChurchTupObj x y = call (call (abs $ abs $ abs $ called (called (ret 0) (ret 2)) (ret 1)) x) y where
@@ -215,9 +222,9 @@ makeBoolObj a = abs $ abs $ ret (if a then 1 else 0) where
     abs = deBruijnFunction
     ret = deBruijnReturnVal
 
-reallySimpleObj :: UweObjEncoding -> String -> (UweObj -> UweObj) -> UweObj
-reallySimpleObj _asEncoding _asHsCode _call = me where
-    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn _asCombinators
+reallySimpleObj :: UweObjEncoding -> String -> (UweObj -> UweObj) -> (UweObj -> UweObj) -> UweObj
+reallySimpleObj _asEncoding _asHsCode _call _asUnMemoizedCombF = me where
+    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn _asCombinators _asUnMemoizedComb
     _simplify = const $ const me
     _replace = const $ const me
     _allVars = Set.empty
@@ -228,56 +235,43 @@ reallySimpleObj _asEncoding _asHsCode _call = me where
     _simplifyDeBruijn = const $ const me
     _incDeBruijn = const me
     _asCombinators = (0, me)
+    _asUnMemoizedComb = _asUnMemoizedCombF me
 
 tupleChar :: Char -> UweObj
-tupleChar chr = reallySimpleObj (UweObjEncoding ("tupleChar: "++[chr]) [] []) ("tupleChar " ++ show chr) (call $ makeListObj $ map (makeBoolObj . (== 1) . (`mod` 2) . (fromEnum chr `div`) . (2 ^)) [0..7])
+tupleChar chr = reallySimpleObj (UweObjEncoding ("tupleChar: "++[chr]) [] []) ("tupleChar " ++ show chr) (call $ toCombinators $ makeListObj $ map (makeBoolObj . (== 1) . (`mod` 2) . (fromEnum chr `div`) . (2 ^)) [0..7]) id
 
 tupleCharStr :: String -> UweObj
 tupleCharStr "" = emptyListObj
-tupleCharStr str@(chr:rest) = reallySimpleObj (UweObjEncoding ("tupleCharStr: "++str) [] []) ("tupleCharStr " ++ show str) (call $ consListObj (tupleChar chr) (tupleCharStr rest))
+tupleCharStr str@(chr:rest) = reallySimpleObj (UweObjEncoding ("tupleCharStr: "++str) [] []) ("tupleCharStr " ++ show str) (call $ toCombinators $ consListObj (tupleChar chr) (tupleCharStr rest)) id
 
 arbitraryVal :: Natural -> UweObj
-arbitraryVal n = reallySimpleObj (UweObjEncoding "arbitraryVal" [n] []) ("arbitraryVal " ++ show n) (called $ arbitraryVal n)
+arbitraryVal n = reallySimpleObj (UweObjEncoding "arbitraryVal" [n] []) ("arbitraryVal " ++ show n) (called $ arbitraryVal n) id
 
 combI :: UweObj
-combI = reallySimpleObj (UweObjEncoding "combI" [] []) "combI" id
+combI = reallySimpleObj (UweObjEncoding "combI" [] []) "combI" id id
 
 combK :: UweObj
-combK = reallySimpleObj (UweObjEncoding "combK" [] []) "combK" calledCombK
+combK = reallySimpleObj (UweObjEncoding "combK" [] []) "combK" calledCombK id
+calledCombK x = reallySimpleObj (UweObjEncoding "calledCombK" [] [x]) ("calledCombK (" ++ show x ++ ")") (const x) (const $ calledCombK $ asUnMemoizedComb x)
 
-calledCombK :: UweObj -> UweObj
-calledCombK x = reallySimpleObj (UweObjEncoding "calledCombK" [] [x]) ("calledCombK (" ++ show x ++ ")") (const x)
+tripleCombinator :: Char -> (UweObj -> UweObj -> UweObj -> UweObj) -> UweObj
+tripleCombinator c f = me where
+    name1 = "comb" ++ [c]
+    name2 = "calledComb" ++ [c]
+    name3 = "calledCalledComb" ++ [c]
+    me = reallySimpleObj (UweObjEncoding name1 [] []) name1 calledMe id
+    calledMe x = reallySimpleObj (UweObjEncoding name2 [] [x]) (name2 ++ " (" ++ show x ++ ")") (calledCalledMe x) id
+    calledCalledMe x y = reallySimpleObj (UweObjEncoding name3 [] [x]) (name3 ++ " (" ++ show x ++ ") (" ++ show y ++ ")") (f x y) id
 
-nCombinator :: Char -> (UweObj -> [UweObj] -> UweObj) -> (Natural -> UweObj, Natural -> [UweObj] -> UweObj)
-nCombinator c f = (combN, calledCombN) where
-    name1 = "comb" ++ [c] ++ "n"
-    name2 = "calledComb" ++ [c] ++ "n"
+combB = tripleCombinator 'B' (\x y z -> x `call` (y `call` z))
+combC = tripleCombinator 'C' (\x y z -> x `call` z `call` y)
+combS = tripleCombinator 'S' (\x y z -> x `call` z `call` (y `call` z))
 
-    combN :: Natural -> UweObj
-    combN n = reallySimpleObj (UweObjEncoding name1 [n] []) (name1 ++ " " ++ show n) (callCombN n [])
+nCombinator :: Char -> (Natural -> UweObj) -> (Natural -> UweObj)
+nCombinator c f = combN where
+    name = "comb" ++ [c] ++ "n"
+    combN n = reallySimpleObj (UweObjEncoding name [n] []) (name ++ " " ++ show n) (called $ combN n) (const $ f n)
 
-    calledCombN :: Natural -> [UweObj] -> UweObj
-    calledCombN n l = reallySimpleObj (UweObjEncoding name2 [n] l) (name2 ++ " " ++ show n ++ " " ++ show l) (callCombN n l)
-
-    callCombN :: Natural -> [UweObj] -> UweObj -> UweObj
-    callCombN n l x
-        | (fromIntegral $ length l) == n + 2 = f x l
-        | otherwise = calledCombN n (l ++ [x]) -- TODO O(n)
-
-_combsBn :: (Natural -> UweObj, Natural -> [UweObj] -> UweObj)
-_combsBn = nCombinator 'B' (foldr call)
-
-combBn = fst _combsBn
-calledCombBn = snd _combsBn
-
-_combsCn :: (Natural -> UweObj, Natural -> [UweObj] -> UweObj)
-_combsCn = nCombinator 'C' (\x (f:(g:r)) -> call (call f $ foldr call x r) g)
-
-combCn = fst _combsCn
-calledCombCn = snd _combsCn
-
-_combsSn :: (Natural -> UweObj, Natural -> [UweObj] -> UweObj)
-_combsSn = nCombinator 'S' (\x (f:(g:r)) -> call (call f $ foldr call x r) (call g $ foldr call x r))
-
-combSn = fst _combsSn
-calledCombSn = snd _combsSn
+combBn = nCombinator 'B' (\n -> iterate ((combB `called` combB) `called`) combB !! (fromInteger $ toInteger $ n - 1))
+combCn = nCombinator 'C' (\n -> iterate ((combB `called` (combB `called` combC) `called` combB) `called`) combC !! (fromInteger $ toInteger $ n - 1))
+combSn = nCombinator 'S' (\n -> iterate ((combB `called` (combB `called` combS) `called` combB) `called`) combS !! (fromInteger $ toInteger $ n - 1))

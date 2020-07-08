@@ -49,7 +49,7 @@ objToNumber = encodingCriteriaToConversion [Just criteria1, Just criteria2, Just
             | otherwise = Nothing
     criteria2 _ = Nothing
 
-    criteria3 (UweObjEncoding "called" [] [a, b])
+    criteria3 (UweObjEncoding "CalledUweObj" [] [a, b])
             | a == ArbitraryVal 0 = (criteria3 $ asEncoding b) >>= (return . (+ 1))
             | b == ArbitraryVal 1 = criteria2 $ asEncoding a
             | otherwise = Nothing
@@ -76,8 +76,8 @@ objToTuple = encodingCriteriaToConversion [Just criteria1, Just criteria2] where
     criteria1 (UweObjEncoding "tuple" [] [a, b]) = Just (a, b)
     criteria1 _ = Nothing
 
-    criteria2 (UweObjEncoding "called" [] [a, b]) = result $ asEncoding a where
-        result (UweObjEncoding "called" [] [c, d]) = result2 (asEncoding c) d
+    criteria2 (UweObjEncoding "CalledUweObj" [] [a, b]) = result $ asEncoding a where
+        result (UweObjEncoding "CalledUweObj" [] [c, d]) = result2 (asEncoding c) d
         result _ = Nothing
         result2 (UweObjEncoding "ArbitraryVal" [0] []) d = Just (d, b)
         result2 _ _ = Nothing
@@ -93,7 +93,7 @@ objToMaybe = encodingCriteriaToConversion [Just criteria1, Nothing, Just criteri
     criteria1 _ = Nothing
 
     criteria2 (UweObjEncoding "ArbitraryVal" [1] []) = Just Nothing
-    criteria2 (UweObjEncoding "called" [] [a, b]) = result $ asEncoding a where
+    criteria2 (UweObjEncoding "CalledUweObj" [] [a, b]) = result $ asEncoding a where
         result (UweObjEncoding "ArbitraryVal" [0] []) = Just $ Just b
         result _ = Nothing
     criteria2 _ = Nothing
@@ -107,7 +107,7 @@ objToEither = encodingCriteriaToConversion [Just criteria1, Nothing, Just criter
     criteria1 (UweObjEncoding "right" [] [a]) = Just $ Right a
     criteria1 _ = Nothing
 
-    criteria2 (UweObjEncoding "called" [] [a, b]) = result $ asEncoding a where
+    criteria2 (UweObjEncoding "CalledUweObj" [] [a, b]) = result $ asEncoding a where
         result (UweObjEncoding "ArbitraryVal" [0] []) = Just $ Left b
         result (UweObjEncoding "ArbitraryVal" [1] []) = Just $ Right b
         result _ = Nothing
@@ -121,8 +121,8 @@ objToList = encodingCriteriaToConversion [Just criteria1, Nothing, Just criteria
     criteria1 (UweObjEncoding "list" [] list) = Just list
     criteria1 _ = Nothing
 
-    criteria2 (UweObjEncoding "called" [] [a, rest]) = result $ asEncoding a where
-        result (UweObjEncoding "called" [] [b, h]) = result2 h $ asEncoding b
+    criteria2 (UweObjEncoding "CalledUweObj" [] [a, rest]) = result $ asEncoding a where
+        result (UweObjEncoding "CalledUweObj" [] [b, h]) = result2 h $ asEncoding b
         result _ = Nothing
         result2 h (UweObjEncoding "ArbitraryVal" [0] []) = do
             t <- criteria2 $ asEncoding $ simplify rest Nothing -- TODO this is soooooo sketchy

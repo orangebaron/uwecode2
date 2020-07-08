@@ -21,7 +21,7 @@ criteriaToConversion (firstCriteria:restCriteria) depth obj0 = tryToSimplify (he
     tryToSimplify nextHelper (Just criteria) obj = either nextHelper Right $ simplifyWithCriteriaGivenMaxDepth criteria depth obj
     helper n obj
         | n >= length restCriteria = Left obj0
-        | otherwise = tryToSimplify (helper $ n + 1) (restCriteria !! n) (called obj $ arbitraryVal $ toEnum $ fromEnum n)
+        | otherwise = tryToSimplify (helper $ n + 1) (restCriteria !! n) (CalledUweObj obj $ ArbitraryVal $ toEnum $ fromEnum n)
 
 encodingCriteriaToCriteria :: EncodingCriteria a -> Criteria a
 encodingCriteriaToCriteria = (. asEncoding)
@@ -45,15 +45,15 @@ objToNumber = encodingCriteriaToConversion [Just criteria1, Just criteria2, Just
     criteria1 _ = Nothing
 
     criteria2 (UweObjEncoding "calledChurchNum" [n] [x])
-            | x == arbitraryVal 0 = Just n
+            | x == ArbitraryVal 0 = Just n
             | otherwise = Nothing
     criteria2 _ = Nothing
 
     criteria3 (UweObjEncoding "called" [] [a, b])
-            | a == arbitraryVal 0 = (criteria3 $ asEncoding b) >>= (return . (+ 1))
-            | b == arbitraryVal 1 = criteria2 $ asEncoding a
+            | a == ArbitraryVal 0 = (criteria3 $ asEncoding b) >>= (return . (+ 1))
+            | b == ArbitraryVal 1 = criteria2 $ asEncoding a
             | otherwise = Nothing
-    criteria3 (UweObjEncoding "arbitraryVal" [1] []) = Just 0
+    criteria3 (UweObjEncoding "ArbitraryVal" [1] []) = Just 0
     criteria3 _ = Nothing
 
 objToBool :: Conversion Bool
@@ -65,7 +65,7 @@ objToBool = encodingCriteriaToConversion [Just criteria1, Nothing, Just criteria
     criteria1 (UweObjEncoding "true" [] []) = Just True
     criteria1 _ = Nothing
 
-    criteria2 (UweObjEncoding "arbitraryVal" [n] []) = Just $ n == 0
+    criteria2 (UweObjEncoding "ArbitraryVal" [n] []) = Just $ n == 0
     criteria2 _ = Nothing
 
 objToTuple :: Conversion (UweObj, UweObj)
@@ -79,7 +79,7 @@ objToTuple = encodingCriteriaToConversion [Just criteria1, Just criteria2] where
     criteria2 (UweObjEncoding "called" [] [a, b]) = result $ asEncoding a where
         result (UweObjEncoding "called" [] [c, d]) = result2 (asEncoding c) d
         result _ = Nothing
-        result2 (UweObjEncoding "arbitraryVal" [0] []) d = Just (d, b)
+        result2 (UweObjEncoding "ArbitraryVal" [0] []) d = Just (d, b)
         result2 _ _ = Nothing
     criteria2 _ = Nothing
 
@@ -92,9 +92,9 @@ objToMaybe = encodingCriteriaToConversion [Just criteria1, Nothing, Just criteri
     criteria1 (UweObjEncoding "left" [] [a]) = Just $ Just a
     criteria1 _ = Nothing
 
-    criteria2 (UweObjEncoding "arbitraryVal" [1] []) = Just Nothing
+    criteria2 (UweObjEncoding "ArbitraryVal" [1] []) = Just Nothing
     criteria2 (UweObjEncoding "called" [] [a, b]) = result $ asEncoding a where
-        result (UweObjEncoding "arbitraryVal" [0] []) = Just $ Just b
+        result (UweObjEncoding "ArbitraryVal" [0] []) = Just $ Just b
         result _ = Nothing
     criteria2 _ = Nothing
 
@@ -108,8 +108,8 @@ objToEither = encodingCriteriaToConversion [Just criteria1, Nothing, Just criter
     criteria1 _ = Nothing
 
     criteria2 (UweObjEncoding "called" [] [a, b]) = result $ asEncoding a where
-        result (UweObjEncoding "arbitraryVal" [0] []) = Just $ Left b
-        result (UweObjEncoding "arbitraryVal" [1] []) = Just $ Right b
+        result (UweObjEncoding "ArbitraryVal" [0] []) = Just $ Left b
+        result (UweObjEncoding "ArbitraryVal" [1] []) = Just $ Right b
         result _ = Nothing
     criteria2 _ = Nothing
 
@@ -124,11 +124,11 @@ objToList = encodingCriteriaToConversion [Just criteria1, Nothing, Just criteria
     criteria2 (UweObjEncoding "called" [] [a, rest]) = result $ asEncoding a where
         result (UweObjEncoding "called" [] [b, h]) = result2 h $ asEncoding b
         result _ = Nothing
-        result2 h (UweObjEncoding "arbitraryVal" [0] []) = do
+        result2 h (UweObjEncoding "ArbitraryVal" [0] []) = do
             t <- criteria2 $ asEncoding $ simplify rest Nothing -- TODO this is soooooo sketchy
             return (h:t)
         result2 _ _ = Nothing
-    criteria2 (UweObjEncoding "arbitraryVal" [1] []) = Just []
+    criteria2 (UweObjEncoding "ArbitraryVal" [1] []) = Just []
     criteria2 _ = Nothing
 
 myGuard :: UweObj -> Bool -> Either UweObj ()

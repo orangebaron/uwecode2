@@ -54,4 +54,4 @@ readExpressionAST map (FuncLiteral var exp) = (readExpressionAST newMap exp) >>=
 readExpressionAST map (Called exp1 exp2) = do
     obj1 <- readExpressionAST map exp1
     obj2 <- readExpressionAST map exp2
-    return $ called obj1 obj2
+    return $ CalledUweObj obj1 obj2

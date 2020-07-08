@@ -9,6 +9,7 @@ type Depth = Maybe Natural
 infiniteDepth :: Depth
 infiniteDepth = Nothing
 
+{-
 data UweObj = UweObj {
     call             :: UweObj -> UweObj,
     replace          :: UweVar -> UweObj -> UweObj,
@@ -21,6 +22,17 @@ data UweObj = UweObj {
     toDeBruijn       :: [UweVar] -> UweObj,
     simplifyComb     :: Depth -> UweObj,
     incDeBruijn      :: UweVar -> UweObj,
+    asCombinators    :: (Natural, UweObj), -- have to convert to de bruijn first before doing this
+    asUnMemoizedComb :: UweObj } -- this is getting way too complicated...
+                                 -- sorry @ anyone whos reading this :)
+-}
+
+data UweObj = UweObj {
+    call             :: UweObj -> UweObj,
+    asEncoding       :: UweObjEncoding,
+    asHsCode         :: String,
+    toDeBruijn       :: [UweVar] -> UweObj,
+    simplifyComb     :: Depth -> UweObj,
     asCombinators    :: (Natural, UweObj), -- have to convert to de bruijn first before doing this
     asUnMemoizedComb :: UweObj } -- this is getting way too complicated...
                                  -- sorry @ anyone whos reading this :)

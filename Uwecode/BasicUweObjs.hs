@@ -17,7 +17,7 @@ _benLynnCombF (a, x) (b, y) = case (a, b) of
 
 returnVal :: UweVar -> UweObj
 returnVal n = me where
-    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn _asCombinators _asUnMemoizedComb
+    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyComb _incDeBruijn _asCombinators _asUnMemoizedComb
     _call = called me
     _replace m obj2
         | m == n = obj2
@@ -31,14 +31,14 @@ returnVal n = me where
     _asHsCode = "returnVal " ++ show n
     _replaceDeBruijn = const $ const me
     _toDeBruijn env = deBruijnReturnVal $ toEnum $ fromJust $ elemIndex n env
-    _simplifyDeBruijn = const $ const me
+    _simplifyComb = const me
     _incDeBruijn = const me
     _asCombinators = (0, me)
     _asUnMemoizedComb = me
 
 deBruijnReturnVal :: UweVar -> UweObj
 deBruijnReturnVal n = me where
-    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn _asCombinators _asUnMemoizedComb
+    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyComb _incDeBruijn _asCombinators _asUnMemoizedComb
     _call = called me
     _replace = const $ const me
     _allVars = Set.empty
@@ -51,7 +51,7 @@ deBruijnReturnVal n = me where
         | n > n2 = deBruijnReturnVal (n-1)
         | otherwise = me
     _toDeBruijn = const me
-    _simplifyDeBruijn depth env = env !! fromEnum n
+    _simplifyComb = const me
     _incDeBruijn threshold
         | n > threshold = deBruijnReturnVal $ n + 1
         | otherwise = me
@@ -62,7 +62,7 @@ deBruijnReturnVal n = me where
 
 function :: UweVar -> UweObj -> UweObj
 function n x = me where
-    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn _asCombinators _asUnMemoizedComb
+    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyComb _incDeBruijn _asCombinators _asUnMemoizedComb
     _call obj2
         | n `Set.member` vs = call (_replaceBindings vs) obj2
         | otherwise = replace (replaceBindings x vs) n obj2
@@ -82,7 +82,7 @@ function n x = me where
     _asHsCode = "function " ++ show n ++ " (" ++ show x ++ ")"
     _replaceDeBruijn = const $ const me
     _toDeBruijn env = deBruijnFunction $ toDeBruijn x (n:env)
-    _simplifyDeBruijn = const $ const me
+    _simplifyComb = const me
     _incDeBruijn = const me
     _asCombinators = (0, me)
     _asUnMemoizedComb = me
@@ -96,7 +96,7 @@ function n x = me where
 
 deBruijnFunction :: UweObj -> UweObj
 deBruijnFunction x = me where
-    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn _asCombinators _asUnMemoizedComb
+    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyComb _incDeBruijn _asCombinators _asUnMemoizedComb
     _call obj2 = replaceDeBruijn x 0 obj2
     _replace = const $ const me
     _allVars = Set.empty
@@ -106,7 +106,7 @@ deBruijnFunction x = me where
     _asHsCode = "deBruijnFunction " ++ " (" ++ show x ++ ")"
     _replaceDeBruijn n obj = deBruijnFunction $ replaceDeBruijn x (n+1) (incDeBruijn obj 0)
     _toDeBruijn = const me
-    _simplifyDeBruijn = const $ const me
+    _simplifyComb = const me
     _incDeBruijn threshold = deBruijnFunction $ incDeBruijn x $ threshold + 1
     _asCombinators = v where
         (n, e) = asCombinators x
@@ -117,7 +117,7 @@ deBruijnFunction x = me where
 
 called :: UweObj -> UweObj -> UweObj
 called a b = me where
-    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn _asCombinators _asUnMemoizedComb
+    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyComb _incDeBruijn _asCombinators _asUnMemoizedComb
     _call = called me
     _replace m obj2 = called (replace a m obj2) (replace b m obj2)
     _allVars = allVars a `Set.union` allVars b
@@ -127,17 +127,16 @@ called a b = me where
     _asHsCode = "called (" ++ show a ++ ") (" ++ show b ++ ")"
     _replaceDeBruijn n2 obj = called (replaceDeBruijn a n2 obj) (replaceDeBruijn b n2 obj)
     _toDeBruijn env = called (toDeBruijn a env) (toDeBruijn b env)
-    _simplifyDeBruijn (Just 0) _ = me
-    _simplifyDeBruijn depth env
-        | useVal1   = simp2 val1
-        | useVal2   = simp2 val2
-        | useVal3   = simp2 val3
-        | otherwise = me
+    _simplifyComb (Just 0) = me
+    _simplifyComb depth
+        | useVal1   = simp val1
+        | useVal2   = simp val2
+        | useVal3   = simp val3
+        | otherwise = val3
         where
-            simp1 x  = simplifyDeBruijn x (decrementDepth depth) env
-            simp2 x  = simplifyDeBruijn x (decrementDepth depth) env
-            simpA    = simp1 a
-            simpB    = simp1 b
+            simp x  = simplifyComb x (decrementDepth depth)
+            simpA    = simp a
+            simpB    = simp b
             val1     = call a b
             val2     = call simpA b
             val3     = call simpA simpB
@@ -153,8 +152,7 @@ called a b = me where
 
 churchNum :: Natural -> UweObj
 churchNum n = me where
-    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn _asCombinators _asUnMemoizedComb
-    _simplify = const $ const me
+    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyComb _incDeBruijn _asCombinators _asUnMemoizedComb
     _call = calledChurchNum n
     _replace = const $ const me
     _allVars = Set.empty
@@ -164,16 +162,15 @@ churchNum n = me where
     _asHsCode = "churchNum " ++ show n
     _replaceDeBruijn = const $ const me
     _toDeBruijn = const me
-    _simplifyDeBruijn = const $ const me
+    _simplifyComb = const me
     _incDeBruijn = const me
     _asCombinators = (0, me)
     _asUnMemoizedComb = me
 
 calledChurchNum :: Natural -> UweObj -> UweObj
-calledChurchNum 0 _ = function 0 $ returnVal 0
+calledChurchNum 0 _ = combI
 calledChurchNum n x = me where
-    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn _asCombinators _asUnMemoizedComb
-    _simplify = const $ const me
+    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyComb _incDeBruijn _asCombinators _asUnMemoizedComb
     _call = (call x) . (called $ calledChurchNum (n-1) x)
     _replace m obj2 = calledChurchNum n $ replace x m obj2
     _allVars = allVars x
@@ -183,7 +180,7 @@ calledChurchNum n x = me where
     _asHsCode = "calledChurchNum " ++ show n ++ " (" ++ show x ++ ")"
     _replaceDeBruijn n2 obj = calledChurchNum n $ replaceDeBruijn x n2 obj
     _toDeBruijn env = calledChurchNum n $ toDeBruijn x env
-    _simplifyDeBruijn = const $ const me
+    _simplifyComb = const me
     _incDeBruijn = calledChurchNum n . incDeBruijn x
     _asCombinators = (m, calledChurchNum n y) where (m, y) = asCombinators x
     _asUnMemoizedComb = calledChurchNum n $ asUnMemoizedComb x
@@ -224,15 +221,14 @@ makeBoolObj a = abs $ abs $ ret (if a then 1 else 0) where
 
 reallySimpleObj :: UweObjEncoding -> String -> (UweObj -> UweObj) -> (UweObj -> UweObj) -> UweObj
 reallySimpleObj _asEncoding _asHsCode _call _asUnMemoizedCombF = me where
-    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyDeBruijn _incDeBruijn _asCombinators _asUnMemoizedComb
-    _simplify = const $ const me
+    me = UweObj _call _replace _allVars _unboundVars _replaceBindings _asEncoding _asHsCode _replaceDeBruijn _toDeBruijn _simplifyComb _incDeBruijn _asCombinators _asUnMemoizedComb
     _replace = const $ const me
     _allVars = Set.empty
     _unboundVars = const Set.empty
     _replaceBindings = const me
     _replaceDeBruijn = const $ const me
     _toDeBruijn = const me
-    _simplifyDeBruijn = const $ const me
+    _simplifyComb = const me
     _incDeBruijn = const me
     _asCombinators = (0, me)
     _asUnMemoizedComb = _asUnMemoizedCombF me

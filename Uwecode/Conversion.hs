@@ -6,6 +6,7 @@ import Uwecode.Simplify
 import Uwecode.IO
 import GHC.Natural
 import Data.Either
+-- import System.IO.Unsafe
 
 type Conversion a = Depth -> UweObj -> Either UweObj a
 type IgnoringConversion a = Depth -> UweObj -> Maybe a
@@ -112,6 +113,28 @@ objToEither = encodingCriteriaToConversion [Just criteria1, Nothing, Just criter
         result _ = Nothing
     criteria2 _ = Nothing
 
+objToList :: Conversion [UweObj]
+objToList = encodingCriteriaToConversion [Just criteria1, Nothing, Just criteria2] where
+    criteria1 :: EncodingCriteria [UweObj]
+    criteria2 :: EncodingCriteria [UweObj]
+
+    criteria1 (UweObjEncoding "list" [] list) = Just list
+    criteria1 _ = Nothing
+
+    criteria2 (UweObjEncoding "called" [] [a, rest]) = result $ asEncoding a where
+        result (UweObjEncoding "called" [] [b, h]) = result2 h $ asEncoding b
+        result _ = Nothing
+        result2 h (UweObjEncoding "arbitraryVal" [0] []) = do
+            t <- criteria2 $ asEncoding $ simplify rest Nothing -- TODO this is soooooo sketchy
+            return (h:t)
+        result2 _ _ = Nothing
+    criteria2 (UweObjEncoding "arbitraryVal" [1] []) = Just []
+    criteria2 _ = Nothing
+
+myGuard :: UweObj -> Bool -> Either UweObj ()
+myGuard _ True = Right ()
+myGuard obj False = Left obj
+
 objToChar :: Conversion Char
 objToChar = encCriteriaAndEitherFuncToConversion criteria helper where
     criteria :: EncodingCriteria Char
@@ -127,45 +150,15 @@ objToChar = encCriteriaAndEitherFuncToConversion criteria helper where
             chr = case (drop lenStr objStr) of
                 [c] -> Just c
                 _   -> Nothing
-
-    helper depth objSimp = do
-        (l, r)     <- objToTuple depth objSimp
-        (ll, lr)   <- objToTuple depth l
-        (rl, rr)   <- objToTuple depth r
-        (lll, llr) <- objToTuple depth ll
-        (lrl, lrr) <- objToTuple depth lr
-        (rll, rlr) <- objToTuple depth rl
-        (rrl, rrr) <- objToTuple depth rr
-        lllB <- objToBool depth lll
-        llrB <- objToBool depth llr
-        lrlB <- objToBool depth lrl
-        lrrB <- objToBool depth lrr
-        rllB <- objToBool depth rll
-        rlrB <- objToBool depth rlr
-        rrlB <- objToBool depth rrl
-        rrrB <- objToBool depth rrr
-        return $ toEnum $ convToInt [rrrB, rrlB, rlrB, rllB, lrrB, lrlB, llrB, lllB]
-
-    convToInt bools = sum $ [(2 ^ i) * (fromEnum $ bools !! i) | i <- [0..(length bools - 1)]]
-
-objToList :: Conversion [UweObj]
-objToList = encCriteriaAndEitherFuncToConversion criteria helper where
-    criteria :: EncodingCriteria [UweObj]
-    helper :: Depth -> UweObj -> Either UweObj [UweObj]
-    maybeObjToList :: Depth -> Maybe UweObj -> Either UweObj [UweObj]
-
-    criteria (UweObjEncoding "list" [] list) = Just list
     criteria _ = Nothing
 
     helper depth objSimp = do
-        maybe <- objToMaybe depth objSimp
-        maybeObjToList depth maybe
+        list <- objToList depth objSimp
+        myGuard objSimp (length list == 8)
+        boolList <- either (const $ Left objSimp) Right $ mapM (objToBool depth) list
+        return $ toEnum $ convToInt boolList
 
-    maybeObjToList _ Nothing = Right []
-    maybeObjToList depth (Just x) = do
-        (h, t) <- objToTuple depth x
-        restOfList <- objToList depth t
-        return (h:restOfList)
+    convToInt bools = sum $ [(2 ^ i) * (fromEnum $ bools !! i) | i <- [0..(length bools - 1)]]
 
 objToString :: Conversion String
 objToString = encCriteriaAndEitherFuncToConversion criteria helper where
@@ -181,14 +174,8 @@ objToString = encCriteriaAndEitherFuncToConversion criteria helper where
     criteria _ = Nothing
 
     helper depth objSimp = do
-        maybe <- objToMaybe depth objSimp
-        case maybe of
-            Nothing -> return ""
-            (Just x) -> do
-                (chr, rest) <- objToTuple depth x
-                c <- objToChar depth chr
-                s <- objToString depth rest
-                return (c:s)
+        list <- objToList depth objSimp
+        either (const $ Left objSimp) Right $ mapM (objToChar depth) list
 
 objToIO :: IgnoringConversion UweIO
 objToIO depth obj = do

@@ -17,10 +17,10 @@ _benLynnCombF (a, x) (b, y) = case (a, b) of
 
 returnVal :: UweVar -> UweObj
 returnVal n = me where
-    me = CustomUweObj _call _asEncoding _asHsCode _toDeBruijn _simplifyComb _asCombinators _asUnMemoizedCombinators
+    me = CustomUweObj _call _asEncoding _show _toDeBruijn _simplifyComb _asCombinators _asUnMemoizedCombinators
     _call = CalledUweObj me
     _asEncoding = UweObjEncoding "returnVal" [n] []
-    _asHsCode = "returnVal " ++ show n
+    _show = "returnVal " ++ show n
     _toDeBruijn env = deBruijnReturnVal $ toEnum $ fromJust $ elemIndex n env
     _simplifyComb = const me
     _asCombinators = (0, me)
@@ -28,10 +28,10 @@ returnVal n = me where
 
 deBruijnReturnVal :: UweVar -> UweObj
 deBruijnReturnVal n = me where
-    me = CustomUweObj _call _asEncoding _asHsCode _toDeBruijn _simplifyComb _asCombinators _asUnMemoizedCombinators
+    me = CustomUweObj _call _asEncoding _show _toDeBruijn _simplifyComb _asCombinators _asUnMemoizedCombinators
     _call = CalledUweObj me
     _asEncoding = UweObjEncoding "deBruijnReturnVal" [n] []
-    _asHsCode = "deBruijnReturnVal " ++ show n
+    _show = "deBruijnReturnVal " ++ show n
     _toDeBruijn = const me
     _simplifyComb = const me
     _asCombinators
@@ -41,10 +41,10 @@ deBruijnReturnVal n = me where
 
 function :: UweVar -> UweObj -> UweObj
 function n x = me where
-    me = CustomUweObj _call _asEncoding _asHsCode _toDeBruijn _simplifyComb _asCombinators _asUnMemoizedCombinators
+    me = CustomUweObj _call _asEncoding _show _toDeBruijn _simplifyComb _asCombinators _asUnMemoizedCombinators
     _call = const me
     _asEncoding = UweObjEncoding "function" [n] [x]
-    _asHsCode = "function " ++ show n ++ " (" ++ show x ++ ")"
+    _show = "function " ++ show n ++ " (" ++ show x ++ ")"
     _toDeBruijn env = deBruijnFunction $ toDeBruijn x (n:env)
     _simplifyComb = const me
     _asCombinators = (0, me)
@@ -52,10 +52,10 @@ function n x = me where
 
 deBruijnFunction :: UweObj -> UweObj
 deBruijnFunction x = me where
-    me = CustomUweObj _call _asEncoding _asHsCode _toDeBruijn _simplifyComb _asCombinators _asUnMemoizedCombinators
+    me = CustomUweObj _call _asEncoding _show _toDeBruijn _simplifyComb _asCombinators _asUnMemoizedCombinators
     _call = const me
     _asEncoding = UweObjEncoding "deBruijnFunction" [] [x]
-    _asHsCode = "deBruijnFunction " ++ " (" ++ show x ++ ")"
+    _show = "deBruijnFunction " ++ " (" ++ show x ++ ")"
     _toDeBruijn = const me
     _simplifyComb = const me
     _asCombinators = v where
@@ -65,43 +65,12 @@ deBruijnFunction x = me where
             _ -> (n - 1, e)
     _asUnMemoizedCombinators = me
 
-{-
-CalledUweObj :: UweObj -> UweObj -> UweObj
-CalledUweObj a b = me where
-    me = CustomUweObj _call _asEncoding _asHsCode _toDeBruijn _simplifyComb _asCombinators _asUnMemoizedCombinators
-    _call = CalledUweObj me
-    _asEncoding = UweObjEncoding "CalledUweObj" [] [a, b]
-    _asHsCode = "CalledUweObj (" ++ show a ++ ") (" ++ show b ++ ")"
-    _toDeBruijn env = CalledUweObj (toDeBruijn a env) (toDeBruijn b env)
-    _simplifyComb (Just 0) = me
-    _simplifyComb depth
-        | useVal1   = simp val1
-        | useVal2   = simp val2
-        | useVal3   = simp val3
-        | otherwise = val3
-        where
-            simp x  = simplifyComb x (decrementDepth depth)
-            simpA    = simp a
-            simpB    = simp b
-            val1     = call a b
-            val2     = call simpA b
-            val3     = call simpA simpB
-            useVal1  = val1 /= me
-            useVal2  = val2 /= me
-            useVal3  = val3 /= me && encStrA == "arbitraryVal"
-            (UweObjEncoding encStrA _ _) = asEncoding a
-    _asCombinators = (max m n, _benLynnCombF x y) where
-        x@(m, _) = asCombinators a
-        y@(n, _) = asCombinators b
-    _asUnMemoizedCombinators = CalledUweObj (asUnMemoizedCombinators a) (asUnMemoizedCombinators b)
--}
-
 churchNum :: Natural -> UweObj
 churchNum n = me where
-    me = CustomUweObj _call _asEncoding _asHsCode _toDeBruijn _simplifyComb _asCombinators _asUnMemoizedCombinators
+    me = CustomUweObj _call _asEncoding _show _toDeBruijn _simplifyComb _asCombinators _asUnMemoizedCombinators
     _call = calledChurchNum n
     _asEncoding = UweObjEncoding "churchNum" [n] []
-    _asHsCode = "churchNum " ++ show n
+    _show = "churchNum " ++ show n
     _toDeBruijn = const me
     _simplifyComb = const me
     _asCombinators = (0, me)
@@ -110,10 +79,10 @@ churchNum n = me where
 calledChurchNum :: Natural -> UweObj -> UweObj
 calledChurchNum 0 _ = CombI
 calledChurchNum n x = me where
-    me = CustomUweObj _call _asEncoding _asHsCode _toDeBruijn _simplifyComb _asCombinators _asUnMemoizedCombinators
+    me = CustomUweObj _call _asEncoding _show _toDeBruijn _simplifyComb _asCombinators _asUnMemoizedCombinators
     _call = (call x) . (CalledUweObj $ calledChurchNum (n-1) x)
     _asEncoding = UweObjEncoding "calledChurchNum" [n] [x]
-    _asHsCode = "calledChurchNum " ++ show n ++ " (" ++ show x ++ ")"
+    _show = "calledChurchNum " ++ show n ++ " (" ++ show x ++ ")"
     _toDeBruijn env = calledChurchNum n $ toDeBruijn x env
     _simplifyComb = const me
     _asCombinators = (m, calledChurchNum n y) where (m, y) = asCombinators x
@@ -154,8 +123,8 @@ makeBoolObj a = abs $ abs $ ret (if a then 1 else 0) where
     ret = deBruijnReturnVal
 
 reallySimpleObj :: UweObjEncoding -> String -> (UweObj -> UweObj) -> (UweObj -> UweObj) -> UweObj
-reallySimpleObj _asEncoding _asHsCode _call _asUnMemoizedCombinatorsF = me where
-    me = CustomUweObj _call _asEncoding _asHsCode _toDeBruijn _simplifyComb _asCombinators _asUnMemoizedCombinators
+reallySimpleObj _asEncoding _show _call _asUnMemoizedCombinatorsF = me where
+    me = CustomUweObj _call _asEncoding _show _toDeBruijn _simplifyComb _asCombinators _asUnMemoizedCombinators
     _toDeBruijn = const me
     _simplifyComb = const me
     _asCombinators = (0, me)

@@ -9,24 +9,10 @@ type Depth = Maybe Natural
 infiniteDepth :: Depth
 infiniteDepth = Nothing
 
-{-
-data UweObj = UweObj {
-    call             :: UweObj -> UweObj,
-    asEncoding       :: UweObjEncoding,
-    asHsCode         :: String,
-    toDeBruijn       :: [UweVar] -> UweObj,
-    simplifyComb     :: Depth -> UweObj,
-    asCombinators    :: (Natural, UweObj), -- have to convert to de bruijn first before doing this
-    asUnMemoizedComb :: UweObj } -- this is getting way too complicated...
-                                 -- sorry @ anyone whos reading this :)
--}
-
 data UweObj = CombS | CombK | CombI | CombB | CombC | CalledUweObj UweObj UweObj | ArbitraryVal Natural |
     CustomUweObj (UweObj -> UweObj) {- call -} UweObjEncoding {- asEncoding -} String {- show -} ([UweVar] -> UweObj) {- toDeBruijn -} (Depth -> UweObj) {- simplify -} (Natural, UweObj) {- asCombinators -} UweObj {- asUnMemoizedCombinators -}
 
 data UweObjEncoding = UweObjEncoding String [Natural] [UweObj] deriving (Show, Eq)
-
--------------------------
 
 call :: UweObj -> UweObj -> UweObj
 call (CalledUweObj (CalledUweObj CombS x) y) z = x `call` z `call` (y `call` z)
@@ -59,7 +45,23 @@ toDeBruijn (CustomUweObj _ _ _ f _ _ _) env = f env
 toDeBruijn x env = x
 
 simplifyComb :: UweObj -> Depth -> UweObj
-simplifyComb (CalledUweObj x y) depth = simplify (CalledUweObj (simplifyComb x depth) (simplifyComb y depth)) depth -- TODO this isnt even close
+simplifyComb x (Just 0) = x
+simplifyComb me@(CalledUweObj a b) depth
+    | useVal1   = simp val1
+    | useVal2   = simp val2
+    | useVal3   = simp val3
+    | otherwise = val3
+    where
+        simp x  = simplifyComb x (decrementDepth depth)
+        simpA    = simp a
+        simpB    = simp b
+        val1     = call a b
+        val2     = call simpA b
+        val3     = call simpA simpB
+        useVal1  = val1 /= me
+        useVal2  = val2 /= me
+        useVal3  = val3 /= me && encStrA == "ArbitraryVal"
+        (UweObjEncoding encStrA _ _) = asEncoding a
 simplifyComb (CustomUweObj _ _ _ _ f _ _) depth = f depth
 simplifyComb x depth = x
 
